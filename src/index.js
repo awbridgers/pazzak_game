@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import registerServiceWorker from './registerServiceWorker';
+import PlayPazzak from "./components/playGame.js"
 
-ReactDOM.render(<App />, document.getElementById('root'));
+ReactDOM.render(<PlayPazzak />, document.getElementById('root'));
 registerServiceWorker();
