@@ -1,0 +1,17 @@
+.playerCards {
+  position: relative;
+  left: 122px;
+  top: 84px;
+}
+.tableData{
+  padding-right: 10px;
+  padding-left: 10px;
+  padding-bottom: 6px;
+  
+}
+
+.opponentCards{
+  position: relative;
+  left: 440px;
+  top: -211px;
+}
