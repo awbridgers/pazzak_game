@@ -1,17 +1,136 @@
 .playerCards {
-  position: relative;
-  left: 122px;
-  top: 84px;
-}
-.tableData{
-  padding-right: 10px;
-  padding-left: 10px;
-  padding-bottom: 6px;
-  
+float: left;
+border-spacing: 22px 10px;
+position: relative;
+left: -4px;
+
 }
 
-.opponentCards{
+.opponentCards {
+  float: right;
+  border-spacing: 22px 10px;
   position: relative;
-  left: 440px;
-  top: -211px;
+
+
+}
+.playingArea{
+  position: relative;
+  height:286px;
+  width:595px;
+  margin: auto;
+  top: -43px;
+
+
+
+
+}
+
+.tableData{
+  height: 84px;
+  width: 65px;
+  text-align: center;
+  padding:0;
+
+
+
+}
+
+.points {
+
+  height: 25px;
+  width: 125px;
+
+  position: relative;
+  margin: auto;
+  top: 43px;
+  left: -2px;
+}
+
+.playerPoints{
+  float: left;
+  width: 50%;
+  height:100%;
+  text-align: center;
+  color: white;
+  font-size: 20px;
+}
+
+.oppPoints{
+  float:right;
+  width:50%;
+  height: 100%;
+  text-align: center;
+  color: white;
+  font-size: 20px;
+}
+
+.names {
+  width:75%;
+  height: 50px;
+  position: relative;
+  margin: auto;
+}
+
+.playerName {
+  float:left;
+  width:40%;
+  height: 75%;
+  text-align: center;
+  color: white;
+  position: relative;
+  top:10px;
+  font-size: 20px;
+}
+
+.oppName{
+  float: right;
+  width: 40%;
+  height: 75%;
+  text-align: center;
+  color: white;
+  position: relative;
+  top:10px;
+  font-size: 20px;
+}
+
+.score {
+  width:710px;
+  height: 45px;
+  margin: auto;
+  position: relative;
+  top: -36px;
+  left: -2px;
+
+
+}
+
+.playerScore{
+  width:6%;
+  float: left;
+  height: 50%;
+  text-align: center;
+  color: white;
+  font-size: 20px;
+  position: relative;
+  top:10px;
+
+}
+
+.oppScore{
+  width:6%;
+  float: right;
+  height:50%;
+  text-align: center;
+  color: white;
+  font-size: 20px;
+  position: relative;
+  top:10px;
+}
+
+.controlPanel {
+  width: 335px;
+  height: 60px;
+  position: relative;
+  top: 125px;
+  left: 55px;
 }
