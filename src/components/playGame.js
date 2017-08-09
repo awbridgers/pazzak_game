@@ -82,6 +82,8 @@ export default class PlayPazzak extends Component {
       oppName: "Nyssa", playerWins:0, oppWins:0, playerDefaultCards: [this.startCard],
       oppDefaultCards: [], playerDeck: fillPlayerHands(), oppDeck:fillPlayerHands()};
     this.playersTurn = true;
+    this.playerStands = false;
+    this.userPlayedCard = false;
     this.endTurn=this.endTurn.bind(this);
     this.playCard = this.playCard.bind(this);
 
@@ -106,7 +108,8 @@ export default class PlayPazzak extends Component {
           this.setState({playerDefaultCards: this.state.playerDefaultCards.concat(this.pazzakDeck[random]),
             playerPoints: this.state.playerPoints + this.pazzakDeck[random].pointValue});
           this.playersTurn = true;
-          console.log(this.playersTurn)
+          this.userPlayedCard = false;              //once a player ends turn they can play another card
+          //console.log(this.playersTurn)
         },2000);
       }
 
@@ -121,19 +124,26 @@ export default class PlayPazzak extends Component {
 
   }
   playCard(event){
-    //make copy of state arrays
-    const tempArray = this.state.playerDeck.slice();
-    const playArray = this.state.playerDefaultCards.slice();
-    //make a copy of the selected card object
-    const selectedCard = Object.assign({}, tempArray[event.target.id]);
-    //console.log(selectedCard.pointValue)
-    //push the new card onto the playing area
-    playArray.push(selectedCard);
-    //remove the img src from the player's deck
-    tempArray[event.target.id].image="";
-    //set the state
-    this.setState({playerDeck: tempArray, playerDefaultCards: playArray,
-       playerPoints: this.state.playerPoints + selectedCard.pointValue});
+    if(!this.userPlayedCard){             //if the users hasn't already played a card
+      //set this.userPlayedCard to true so they can't play another card
+      this.userPlayedCard = true;
+      //make copy of state arrays
+      const tempArray = this.state.playerDeck.slice();
+      const playArray = this.state.playerDefaultCards.slice();
+      //make a copy of the selected card object
+      const selectedCard = Object.assign({}, tempArray[event.target.id]);
+      //console.log(selectedCard.pointValue)
+      //push the new card onto the playing area
+      playArray.push(selectedCard);
+      //remove the img src from the player's deck
+      tempArray[event.target.id].image="";
+      //set the state
+      this.setState({playerDeck: tempArray, playerDefaultCards: playArray,
+         playerPoints: this.state.playerPoints + selectedCard.pointValue});
+    }
+    else{
+      console.log("You already played a card!")
+    }
   }
   render(){
     return(
