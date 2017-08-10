@@ -72,6 +72,12 @@ const fillPlayerHands = () => {
   return returnedHand;
     }
 
+export class Stands extends Component {
+  render(){
+    return <div style = {{color: "yellow"}}><h1>STANDS</h1></div>
+  }
+}
+
 export default class PlayPazzak extends Component {
   constructor(){
     super();
@@ -80,9 +86,11 @@ export default class PlayPazzak extends Component {
     this.startCard = this.pazzakDeck[Math.floor(Math.random()*10)];
     this.state = {playerPoints: this.startCard.pointValue, oppPoints: 0, playerName: "Adam",
       oppName: "Nyssa", playerWins:0, oppWins:0, playerDefaultCards: [this.startCard],
-      oppDefaultCards: [], playerDeck: fillPlayerHands(), oppDeck:fillPlayerHands(), playerIsStanding: false};
+      oppDefaultCards: [], playerDeck: fillPlayerHands(), oppDeck:fillPlayerHands(),
+      playerIsStanding: false, oppIsStanding: false};
     this.playersTurn = true;
     this.playerStands = false;
+    this.opponentStands = false;
     this.userPlayedCard = false;
     this.endTurn=this.endTurn.bind(this);
     this.playCard = this.playCard.bind(this);
@@ -95,10 +103,15 @@ export default class PlayPazzak extends Component {
     if(this.state.playerIsStanding && this.state.oppPoints < this.state.playerPoints){  //change to < player points later
       this.opponentTurn();
     }
+    else if(!this.state.playerIsStanding && this.state.oppPoints >=17 && !this.state.oppIsStanding){
+        this.opponentStands = true;
+        this.setState({oppIsStanding: true});
+    }
   }
 
   opponentTurn(){
-    if(this.state.oppDefaultCards.length < 9){
+
+    if(this.state.oppDefaultCards.length < 9 && !this.opponentStands){
       let random = Math.floor(Math.random()*10);
       setTimeout(() =>{
         this.setState((prevState) => {
@@ -107,6 +120,9 @@ export default class PlayPazzak extends Component {
             //console.log(random);
             this.playerTurn();
           },500);
+    }
+    else if(this.opponentStands){
+      this.playerTurn();      //if opponent stands go directly back to player Turn
     }
   }
   playerTurn(){
@@ -252,6 +268,15 @@ export default class PlayPazzak extends Component {
             borderRadius: "8px", fontSize: "16px", marginLeft: "10px", float: "left"}} onClick = {this.stand}>
             Stand
           </button>
+        </div>
+        <div className = "standIndicator">
+          <div style = {{float: "left", width: "47%", height: "100%", textAlign: "center"}}>
+            {this.state.playerIsStanding && <Stands/>}
+          </div>
+          <div style = {{float: "right", width: "47%", height: "100%", textAlign: "center"}}>
+            {this.state.oppIsStanding && <Stands/>}
+          </div>
+
         </div>
         </div>
       </div>
