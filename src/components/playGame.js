@@ -80,7 +80,7 @@ export default class PlayPazzak extends Component {
     this.startCard = this.pazzakDeck[Math.floor(Math.random()*10)];
     this.state = {playerPoints: this.startCard.pointValue, oppPoints: 0, playerName: "Adam",
       oppName: "Nyssa", playerWins:0, oppWins:0, playerDefaultCards: [this.startCard],
-      oppDefaultCards: [], playerDeck: fillPlayerHands(), oppDeck:fillPlayerHands()};
+      oppDefaultCards: [], playerDeck: fillPlayerHands(), oppDeck:fillPlayerHands(), playerIsStanding: false};
     this.playersTurn = true;
     this.playerStands = false;
     this.userPlayedCard = false;
@@ -92,8 +92,7 @@ export default class PlayPazzak extends Component {
 
   }
   componentDidUpdate(){
-    if(this.playerStands && this.state.oppPoints < 20){  //change to < player points later
-      for(let i=0; i<=100000000; i++){}
+    if(this.state.playerIsStanding && this.state.oppPoints < this.state.playerPoints){  //change to < player points later
       this.opponentTurn();
     }
   }
@@ -163,11 +162,7 @@ export default class PlayPazzak extends Component {
   stand(){
     if(this.playersTurn && !this.playerStands){
       this.playerStands = true;         //playerStands true blocks all other user plays
-        if(this.state.oppPoints < this.state.playerPoints && this.state.oppPoints < 20){
-          this.opponentTurn();
-        }
-
-
+      this.setState({playerIsStanding: true})
     }
   }
   render(){
