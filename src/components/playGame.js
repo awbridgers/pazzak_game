@@ -66,7 +66,7 @@ const fillPlayerHands = () => {
   possibleCards.push(new gameCards(-4, minusFour));
   possibleCards.push(new gameCards(-5, minusFive));
   possibleCards.push(new gameCards(-6, minusSix));
-  for(let i=0; i<4; i++){
+  for(let i=0; i<=3; i++){
     returnedHand.push(possibleCards[Math.floor(Math.random()*possibleCards.length)]);
   }
   return returnedHand;
@@ -86,45 +86,60 @@ export default class PlayPazzak extends Component {
     this.userPlayedCard = false;
     this.endTurn=this.endTurn.bind(this);
     this.playCard = this.playCard.bind(this);
+    this.stand = this.stand.bind(this);
+    this.playerTurn = this.playerTurn.bind(this);
 
 
+  }
+  componentDidUpdate(){
+    if(this.playerStands && this.state.oppPoints < 20){  //change to < player points later
+      for(let i=0; i<=100000000; i++){}
+      this.opponentTurn();
+    }
   }
 
   opponentTurn(){
     if(this.state.oppDefaultCards.length < 9){
       let random = Math.floor(Math.random()*10);
-      this.setState({oppDefaultCards: this.state.oppDefaultCards.concat(this.pazzakDeck[random]),
-      oppPoints: this.state.oppPoints + this.pazzakDeck[random].pointValue});
+      setTimeout(() =>{
+        this.setState((prevState) => {
+          return{oppDefaultCards: prevState.oppDefaultCards.concat(this.pazzakDeck[random]),
+            oppPoints: prevState.oppPoints + this.pazzakDeck[random].pointValue}});
+            //console.log(random);
+            this.playerTurn();
+          },500);
     }
   }
-  endTurn(){
-    if(this.playersTurn === true){
-      this.playersTurn = false;
-      this.opponentTurn();
-      if(this.state.playerDefaultCards.length < 9){
-        setTimeout(()=> {
+  playerTurn(){
+    if(!this.playerStands){
+      setTimeout(() => {
+        this.playersTurn = true;
+        this.userPlayedCard = false;
+        if(this.state.playerDefaultCards.length < 9){
           let random = Math.floor((Math.random() * 10));
-          console.log(random);
+          //console.log(random);
           this.setState({playerDefaultCards: this.state.playerDefaultCards.concat(this.pazzakDeck[random]),
             playerPoints: this.state.playerPoints + this.pazzakDeck[random].pointValue});
-          this.playersTurn = true;
-          this.userPlayedCard = false;              //once a player ends turn they can play another card
-          //console.log(this.playersTurn)
-        },2000);
+          }
+        else{
+          console.log("Out of space");
+        }
+      },500);
+    }
+  }
+
+  endTurn(){
+    if(this.playersTurn && !this.playerStands){
+      this.playersTurn = false;
+      this.opponentTurn();
       }
 
     else{
-      console.log("Out of space");
+      console.log("not your turn");
     }
   }
-  else{
-    console.log("not your turn");
-  }
-
-
-  }
   playCard(event){
-    if(!this.userPlayedCard){             //if the users hasn't already played a card
+    if(!this.userPlayedCard && !this.playerStands){             //if the users hasn't already played a card
       //set this.userPlayedCard to true so they can't play another card
       this.userPlayedCard = true;
       //make copy of state arrays
@@ -143,6 +158,16 @@ export default class PlayPazzak extends Component {
     }
     else{
       console.log("You already played a card!")
+    }
+  }
+  stand(){
+    if(this.playersTurn && !this.playerStands){
+      this.playerStands = true;         //playerStands true blocks all other user plays
+        if(this.state.oppPoints < this.state.playerPoints && this.state.oppPoints < 20){
+          this.opponentTurn();
+        }
+
+
     }
   }
   render(){
@@ -227,6 +252,10 @@ export default class PlayPazzak extends Component {
           <button type = "button" style = {{height: "40px", width: "100px",
             borderRadius: "8px", fontSize: "16px", marginLeft: "10px", float: "right"}} onClick = {this.endTurn}>
             End Turn
+          </button>
+          <button type = "button" style = {{height: "40px", width: "100px",
+            borderRadius: "8px", fontSize: "16px", marginLeft: "10px", float: "left"}} onClick = {this.stand}>
+            Stand
           </button>
         </div>
         </div>
