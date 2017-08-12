@@ -68,7 +68,7 @@ const fillPlayerHands = () => {
   possibleCards.push(new gameCards(-5, minusFive));
   possibleCards.push(new gameCards(-6, minusSix));
   for(let i=0; i<=3; i++){
-    returnedHand.push(possibleCards[Math.floor(Math.random()*possibleCards.length)]);
+    returnedHand.push(Object.assign({},possibleCards[Math.floor(Math.random()*possibleCards.length)]));
   }
   return returnedHand;
     }
@@ -166,9 +166,18 @@ export default class PlayPazzak extends Component {
                     }
                   }
                 }
-            else {      //the player decided to stand with fewer points than the opponent
-                if(!this.state.oppIsStanding){
-                  this.setState({oppIsStanding: true})
+            else {      //the player stands and the opp has more points
+                if(!this.state.oppIsStanding){        //either the user stood with fewer points and the opp wins
+                  if(this.state.oppPoints <= 20){
+                    this.setState({oppIsStanding: true})
+                  }
+                  else{     //the opp is over 20 and should try and play a card
+                    let playCard = checkHand(this.state.oppDeck,this.state.oppPoints,this.state.playerIsStanding,this.state.playerPoints);
+                    if(playCard !== -1 && !this.oppPlayedCard){
+                        this.opponentPlayCard(playCard);
+                        this.oppPlayedCard = true;
+                      }
+                  }
               }
             }
           }
