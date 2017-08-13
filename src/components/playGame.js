@@ -122,7 +122,6 @@ export class Stands extends Component {
 export default class PlayPazzak extends Component {
   constructor(){
     super();
-    this.cardOne = new gameCards(1, gameCardOne);
     this.pazzakDeck = fillDeck();
     this.startCard = this.pazzakDeck[Math.floor(Math.random()*10)];
     this.state = {playerPoints: this.startCard.pointValue, oppPoints: 0, playerName: "Adam",
@@ -132,89 +131,148 @@ export default class PlayPazzak extends Component {
     this.playersTurn = true;
     this.playerStands = false;
     this.opponentStands = false;
+    this.roundOver = false;
     this.userPlayedCard = false;
     this.endTurn=this.endTurn.bind(this);
     this.playCard = this.playCard.bind(this);
     this.stand = this.stand.bind(this);
     this.playerTurn = this.playerTurn.bind(this);
     this.opponentPlayCard = this.opponentPlayCard.bind(this);
+    this.determineWinner = this.determineWinner.bind(this);
+    this.newRound = this.newRound.bind(this);
 
 
   }
 
   componentDidUpdate(){
-    if(!this.playersTurn){
-      if(this.playerStands){
-        if(this.firstTimeStand){
-          this.firstTimeStand = false;
-          this.opponentTurn();
-        }
-        else{              //not the first time through on a player stand
-          if(this.state.oppPoints <= this.state.playerPoints){
-            //If the player stands with a small amount of points, don't bother trying to play a card
-            if(this.state.oppPoints < 14){
-              this.opponentTurn();
-            }
-            else if(this.state.oppPoints !== this.state.playerPoints){
-                let playCard = checkHand(this.state.oppDeck,this.state.oppPoints,this.state.playerIsStanding,this.state.playerPoints);
-                  if(playCard !== -1 && !this.oppPlayedCard){
-                    this.opponentPlayCard(playCard);
-                    this.oppPlayedCard = true;
-                  }
-                  else{
-                      this.opponentTurn();
-                    }
-                  }
-                }
-            else {      //the player stands and the opp has more points
-                if(!this.state.oppIsStanding){        //either the user stood with fewer points and the opp wins
-                  if(this.state.oppPoints <= 20){
-                    this.setState({oppIsStanding: true})
-                  }
-                  else{     //the opp is over 20 and should try and play a card
-                    let playCard = checkHand(this.state.oppDeck,this.state.oppPoints,this.state.playerIsStanding,this.state.playerPoints);
+    if(!this.roundOver){
+      if(!this.playersTurn){
+        if(this.playerStands){
+          if(this.state.oppIsStanding){
+            this.determineWinner();
+            this.firstTimeStand = false;
+            //console.log("one");
+          }
+          else if(this.firstTimeStand){
+            this.firstTimeStand = false;
+            this.opponentTurn();
+          }
+          else{              //not the first time through on a player stand
+            if(this.state.oppPoints <= this.state.playerPoints){
+              //If the player stands with a small amount of points, don't bother trying to play a card
+              if(this.state.oppPoints < 14){
+                this.opponentTurn();
+              }
+              else if(this.state.oppPoints !== this.state.playerPoints){
+                  let playCard = checkHand(this.state.oppDeck,this.state.oppPoints,this.state.playerIsStanding,this.state.playerPoints);
                     if(playCard !== -1 && !this.oppPlayedCard){
-                        this.opponentPlayCard(playCard);
-                        this.oppPlayedCard = true;
+                      this.opponentPlayCard(playCard);
+                      this.oppPlayedCard = true;
+                    }
+                    else{
+                        this.opponentTurn();
                       }
+                    }
+                  else{
+                    //console.log("two");
+                    this.determineWinner()
                   }
+                  }
+              else {      //the player stands and the opp has more points
+                  if(!this.state.oppIsStanding){        //either the user stood with fewer points and the opp wins
+                    if(this.state.oppPoints <= 20){
+                      //console.log("three");
+                      this.determineWinner();
+                    }
+                    else{     //the opp is over 20 and should try and play a card
+                      let playCard = checkHand(this.state.oppDeck,this.state.oppPoints,this.state.playerIsStanding,this.state.playerPoints);
+                      if(playCard !== -1 && !this.oppPlayedCard){
+                          this.opponentPlayCard(playCard);
+                          this.oppPlayedCard = true;
+                        }
+                        else{
+                          //console.log("four");
+                          this.determineWinner()
+                        }
+                    }
+                }
               }
             }
           }
-        }
-      else{       //the player is not standing
-        if(!this.state.oppIsStanding){
-            //if the opponent score is between 17 and 20, stand
-            if(this.state.oppPoints >=17 && this.state.oppPoints <=20){
-              let playCard = checkHand(this.state.oppDeck,this.state.oppPoints,this.state.playerIsStanding,this.state.playerPoints);
-              console.log(playCard);
-              if(playCard !== -1 && !this.oppPlayedCard){
-                this.opponentPlayCard(playCard);
-
-              }
-              else{
-                this.opponentStands = true;
-                this.setState({oppIsStanding: true});
-                this.playersTurn = true;
-                this.playerTurn();
-              }
-            }
-            else{   //score is above 20 or below 17
+        else{       //the player is not standing
+          if(!this.state.oppIsStanding){
+              //if the opponent score is between 17 and 20, stand
+              if(this.state.oppPoints >=17 && this.state.oppPoints <=20){
                 let playCard = checkHand(this.state.oppDeck,this.state.oppPoints,this.state.playerIsStanding,this.state.playerPoints);
+                //console.log(playCard);
                 if(playCard !== -1 && !this.oppPlayedCard){
                   this.opponentPlayCard(playCard);
+
                 }
                 else{
+                  this.opponentStands = true;
+                  this.setState({oppIsStanding: true});
                   this.playersTurn = true;
                   this.playerTurn();
                 }
+              }
+              else{   //score is above 20 or below 17
+                  let playCard = checkHand(this.state.oppDeck,this.state.oppPoints,this.state.playerIsStanding,this.state.playerPoints);
+                  if(playCard !== -1 && !this.oppPlayedCard){
+                    this.opponentPlayCard(playCard);
+                  }
+                  else{
+                    if(this.state.oppPoints > 20){
+                      //console.log("five");
+                      this.determineWinner();
+                    }
+                    else{
+                      this.playersTurn = true;
+                      this.playerTurn();
+                    }
+                  }
 
-            }
+              }
+          }
         }
       }
     }
   }
 
+  determineWinner(){
+    let winner = null
+    this.roundOver = true;
+    //if the user is over 20 and the opp is under, opp wins
+    if(this.state.playerPoints > 20 && this.state.oppPoints <= 20){
+      winner = "Opponent";
+    }
+    //if the user is under 20 and the opp goes over, player wins
+    else if(this.state.playerPoints <= 20 && this.state.oppPoints > 20){
+      winner = "Player";
+    }
+    else if(this.state.playerPoints > this.state.oppPoints){
+      winner = "Player";
+    }
+    else if(this.state.playerPoints < this.state.oppPoints){
+      winner = "Opponent";
+    }
+    else{
+      winner = "Tie";
+    }
+    if(winner === "Player"){
+      this.setState({playerWins: this.state.playerWins + 1});
+      alert("You win the round.")
+    }
+    else if(winner === "Opponent"){
+      this.setState({oppWins: this.state.oppWins + 1});
+      alert("Your opponent has won the round.")
+    }
+    else{
+      alert("Tie game.")
+    }
+    this.newRound();
+
+  }
   opponentTurn(){
     if(this.state.oppDefaultCards.length < 9 && !this.state.oppIsStanding){
       let random = Math.floor(Math.random()*10);
@@ -236,7 +294,7 @@ export default class PlayPazzak extends Component {
       //change the values to remove the card's image and point value
       tempArray[index].pointValue = "";
       tempArray[index].image = null;
-      console.log(playThisCard.pointValue);
+      //console.log(playThisCard.pointValue);
       this.oppPlayedCard = true;
       this.setState({oppDefaultCards: this.state.oppDefaultCards.concat(playThisCard),
         oppPoints: this.state.oppPoints + playThisCard.pointValue,
@@ -265,9 +323,14 @@ export default class PlayPazzak extends Component {
 
   endTurn(){
     if(this.playersTurn && !this.playerStands){
-      this.playersTurn = false;
-      this.opponentTurn();
+      if(this.state.playerPoints > 20){
+        this.determineWinner();
       }
+      else{
+        this.playersTurn = false;
+        this.opponentTurn();
+      }
+    }
 
     else{
       console.log("not your turn");
@@ -297,16 +360,36 @@ export default class PlayPazzak extends Component {
   }
   stand(){
     if(this.playersTurn && !this.playerStands){
+      if(this.state.playerPoints > 20){
+        this.determineWinner();
+      }
+      else {
         //playerStands true blocks all other user plays
-      this.firstTimeStand = true;
-      this.playersTurn = false;
-      this.playerStands = true;
-      this.setState({playerIsStanding: true});
+
+        this.firstTimeStand = true;
+        this.playersTurn = false;
+        this.playerStands = true;
+        this.setState({playerIsStanding: true});
+      }
 
     }
     else{
       console.log("You have decided to stand. You can no longer make moves");
     }
+  }
+  newRound(){
+    //reset the cards and player hands, reset booleans
+    this.pazzakDeck = fillDeck();
+    this.startCard = this.pazzakDeck[Math.floor(Math.random()*10)];
+    this.setState({playerPoints: this.startCard.pointValue, oppPoints: 0,
+      playerDefaultCards: [this.startCard], oppDefaultCards: [], playerDeck: fillPlayerHands(), oppDeck:fillPlayerHands(),
+      playerIsStanding: false, oppIsStanding: false});
+    this.playersTurn = true;
+    this.playerStands = false;
+    this.opponentStands = false;
+    this.roundOver = false;
+    this.userPlayedCard = false;
+
   }
   render(){
     return(
