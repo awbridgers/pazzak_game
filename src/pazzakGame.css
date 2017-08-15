@@ -171,3 +171,14 @@ left: -4px;
   width: 595px;
   height: 20px;
 }
+
+.newGame{
+  height: 150px;
+  width:400px;
+  background-color: blue;
+  margin: auto;
+  position: relative;
+  top: -500px;
+  color: white;
+  text-align: center;
+}
