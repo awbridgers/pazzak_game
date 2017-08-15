@@ -136,7 +136,7 @@ export default class PlayPazzak extends Component {
     super();
     this.pazzakDeck = fillDeck();
     this.startCard = this.pazzakDeck[Math.floor(Math.random()*10)];
-    this.state = {playerPoints: this.startCard.pointValue, oppPoints: 0, playerName: "Adam",
+    this.state = {playerPoints: this.startCard.pointValue, oppPoints: 0, playerName: "Player 1",
       oppName: "Nyssa", playerWins:0, oppWins:0, playerDefaultCards: [this.startCard],
       oppDefaultCards: [], playerDeck: fillPlayerHands(), oppDeck:fillPlayerHands(),
       playerIsStanding: false, oppIsStanding: false, gameOver : false};
