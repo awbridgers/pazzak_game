@@ -23,6 +23,7 @@ import minusThree from "../images/cards/minus_3.png"
 import minusFour from "../images/cards/minus_4.png"
 import minusFive from "../images/cards/minus_5.png"
 import minusSix from "../images/cards/minus_6.png"
+import blankCard from "../images/cards/blankCard.png"
 
 
 let bgDiv = {width: "100%", height: "100%", backgroundColor: "black", position: "fixed"};
@@ -121,12 +122,38 @@ export class Stands extends Component {
 
 export class NewGame extends Component {
   render(){
-    return <div className = "newGame">
+    return(
+    <div className = "newGame">
       <h1>{this.props.winner} wins!</h1>
       <h3>Click to below to start a new game</h3>
       <button onClick = {this.props.onClick} style = {{height: "40px", width: "100px",borderRadius: "8px", fontSize: "16px"}}>
         New Game
       </button>
+    </div>
+  )}
+}
+export class Winner extends Component {
+  render(){
+    return(
+      <div className = "winner"></div>
+    )
+  }
+}
+
+export class EnterName extends Component{
+  render(){
+    return <div className = "enterName">
+      <form onSubmit = {this.props.submit}>
+        <label style = {{textAlign: "center"}}><h1>Enter Your Name:
+        <input type = "text" style = {{height: "30px", width: "300px",
+          fontWeight: "bold", position: "relative", top: "-4px", fontSize: "16px"}}
+          onChange = {this.props.onChange} value = {this.props.value}></input>
+        </h1></label>
+      <button type = 'button' style = {{width:"90px",
+          height: "40px", position: "relative", display: "block", margin: "auto",
+          borderRadius: "8px", background:"white", fontSize: "16px" }}
+          onClick = {this.props.submit}>Submit</button>
+      </form>
     </div>
   }
 }
@@ -136,15 +163,14 @@ export default class PlayPazzak extends Component {
     super();
     this.pazzakDeck = fillDeck();
     this.startCard = this.pazzakDeck[Math.floor(Math.random()*10)];
-    this.state = {playerPoints: this.startCard.pointValue, oppPoints: 0, playerName: "Player 1",
-      oppName: "Nyssa", playerWins:0, oppWins:0, playerDefaultCards: [this.startCard],
+    this.state = {playerPoints: this.startCard.pointValue, oppPoints: 0, playerName: "",
+      oppName: "Darth Nihilus", playerWins:0, oppWins:0, playerDefaultCards: [this.startCard],
       oppDefaultCards: [], playerDeck: fillPlayerHands(), oppDeck:fillPlayerHands(),
-      playerIsStanding: false, oppIsStanding: false, gameOver : false};
+      playerIsStanding: false, oppIsStanding: false, gameOver : false, gameBegin: false};
     this.playersTurn = true;
     this.playerStands = false;
     this.opponentStands = false;
     this.roundOver = false;
-    // this.gameOver = false;
     this.userPlayedCard = false;
     this.whoWon = null;
     this.endTurn=this.endTurn.bind(this);
@@ -155,7 +181,8 @@ export default class PlayPazzak extends Component {
     this.determineWinner = this.determineWinner.bind(this);
     this.newRound = this.newRound.bind(this);
     this.newGame = this.newGame.bind(this);
-
+    this.handleSubmit = this.handleSubmit.bind(this);
+    this.handleChange = this.handleChange.bind(this);
 
   }
 
@@ -167,7 +194,7 @@ export default class PlayPazzak extends Component {
             if(this.state.oppIsStanding){
               this.determineWinner();
               this.firstTimeStand = false;
-              console.log("one");
+              //console.log("one");
             }
             else if(this.firstTimeStand){
               this.firstTimeStand = false;
@@ -190,14 +217,14 @@ export default class PlayPazzak extends Component {
                         }
                       }
                 else{     //score are equal, determine a winner => tie
-                  console.log("two");
+                  //console.log("two");
                   this.determineWinner()
                   }
                 }
               else {      //the player stands and the opp has more points
                   if(!this.state.oppIsStanding){        //either the user stood with fewer points and the opp wins or opp is over 20
                     if(this.state.oppPoints <= 20){
-                      console.log("three");
+                      //console.log("three");
                       this.determineWinner();
                     }
                     else{     //the opp is over 20 and should try and play a card
@@ -207,7 +234,7 @@ export default class PlayPazzak extends Component {
                           this.oppPlayedCard = true;
                         }
                       else{       //opp is over 20 and can't play a card so determine winner => user
-                        console.log("four");
+                        //console.log("four");
                         this.determineWinner()
                       }
                     }
@@ -239,7 +266,7 @@ export default class PlayPazzak extends Component {
                     }
                     else{       //can't play a card
                       if(this.state.oppPoints > 20){        //over 20, determine winner => user
-                        console.log("five");
+                        //console.log("five");
                         this.determineWinner();
                       }
                       else{       //score is under 17, players Turn
@@ -251,6 +278,9 @@ export default class PlayPazzak extends Component {
             }
           }
         }
+        else{           //is the players turn
+
+          }
       }
       else{     //the round is over
         if(this.state.oppWins === 3){
@@ -290,40 +320,32 @@ export default class PlayPazzak extends Component {
     else{
       winner = "Tie";
     }
-    if(winner === "Player"){
-      alert("You win the round.")
-      this.setState({playerWins: this.state.playerWins + 1});
-    }
-    else if(winner === "Opponent"){
-      alert("Your opponent has won the round.")
-      this.setState({oppWins: this.state.oppWins + 1});
-    }
-    else{
-      alert("Tie game.")
-      this.newRound();
-    }
-    // if(this.state.playerWins < 3 && this.state.oppWins < 3){
-    //   this.newRound();
-    // }
-    // else{   //one of the players has 3 wins, end the game
-    //   if(this.state.playerWins === 3){
-    //     alert("You have won the match!");
-    //   }
-    //   else{       //opponent wins
-    //     alert("Your opponent has won the match.")
-    //   }
-    // }
-
+    setTimeout(()=>{
+      if(winner === "Player"){
+        alert("You win the round.")
+        this.setState({playerWins: this.state.playerWins + 1});
+      }
+      else if(winner === "Opponent"){
+        alert("Your opponent has won the round.")
+        this.setState({oppWins: this.state.oppWins + 1});
+      }
+      else{
+        alert("Tie game.")
+        this.newRound();
+      }
+    },500);
   }
   opponentTurn(){
     if(this.state.oppDefaultCards.length < 9 && !this.state.oppIsStanding){
-      let random = Math.floor(Math.random()*10);
-      //console.log(this.state.oppIsStanding);
-        this.setState({oppDefaultCards: this.state.oppDefaultCards.concat(this.pazzakDeck[random]),
-            oppPoints: this.state.oppPoints + this.pazzakDeck[random].pointValue});
-      this.oppPlayedCard = false;
-            //console.log(random);
+      setTimeout(()=>{
+        let random = Math.floor(Math.random()*10);
+        //console.log(this.state.oppIsStanding);
+          this.setState({oppDefaultCards: this.state.oppDefaultCards.concat(this.pazzakDeck[random]),
+              oppPoints: this.state.oppPoints + this.pazzakDeck[random].pointValue});
+        this.oppPlayedCard = false;
+              //console.log(random);
 
+      },500);
     }
     else if(this.opponentStands){
       this.playerTurn();      //if opponent stands go directly back to player Turn
@@ -346,22 +368,31 @@ export default class PlayPazzak extends Component {
   }
 
   playerTurn(){
-    if(!this.playerStands){
-
-        this.playersTurn = true;
-        this.userPlayedCard = false;
-        if(this.state.playerDefaultCards.length < 9){
-          let random = Math.floor((Math.random() * 10));
-          //console.log(random);
-          this.setState({playerDefaultCards: this.state.playerDefaultCards.concat(this.pazzakDeck[random]),
-            playerPoints: this.state.playerPoints + this.pazzakDeck[random].pointValue});
+    setTimeout(()=>{
+      if(!this.playerStands){
+          this.playersTurn = true;
+          this.userPlayedCard = false;
+          if(this.state.playerDefaultCards.length < 9){
+            let random = Math.floor((Math.random() * 10));
+            //console.log(random);
+            if(this.state.playerPoints + this.pazzakDeck[random].pointValue === 20){
+              this.firstTimeStand = true;
+              this.playersTurn = false;
+              this.playerStands = true;
+              this.setState({playerDefaultCards: this.state.playerDefaultCards.concat(this.pazzakDeck[random]),
+                playerPoints: this.state.playerPoints + this.pazzakDeck[random].pointValue, playerIsStanding: true});
+            }
+            else{
+              this.setState({playerDefaultCards: this.state.playerDefaultCards.concat(this.pazzakDeck[random]),
+                playerPoints: this.state.playerPoints + this.pazzakDeck[random].pointValue});
+            }
           }
-        else{
-          console.log("Out of space");
+          else{
+            console.log("Out of space");
+          }
         }
-
+      },500);
     }
-  }
 
   endTurn(){
     if(this.playersTurn && !this.playerStands){
@@ -393,15 +424,25 @@ export default class PlayPazzak extends Component {
       //remove the img src from the player's deck
       tempArray[event.target.id].image="";
       //set the state
-      this.setState({playerDeck: tempArray, playerDefaultCards: playArray,
-         playerPoints: this.state.playerPoints + selectedCard.pointValue});
+      if(this.state.playerPoints + selectedCard.pointValue === 20){
+        this.firstTimeStand = true;
+        this.playersTurn = false;
+        this.playerStands = true;
+        this.setState({playerDeck: tempArray, playerDefaultCards: playArray,
+          playerPoints: this.state.playerPoints + selectedCard.pointValue, playerIsStanding: true});
+        }
+      else{
+        this.setState({playerDeck: tempArray, playerDefaultCards: playArray,
+          playerPoints: this.state.playerPoints + selectedCard.pointValue});
+      }
     }
+
     else{
       console.log("You already played a card!")
     }
   }
   stand(){
-    if(this.playersTurn && !this.playerStands){
+    if(this.playersTurn && !this.state.playerIsStanding){
       if(this.state.playerPoints > 20){
         this.determineWinner();
       }
@@ -433,12 +474,35 @@ export default class PlayPazzak extends Component {
   }
   newGame(){
     this.startCard = this.pazzakDeck[Math.floor(Math.random()*10)];
-    this.setState({playerPoints: this.startCard.pointValue, oppPoints: 0, playerName: "Adam",
-      oppName: "Nyssa", playerWins:0, oppWins:0, playerDefaultCards: [this.startCard],
+    this.setState({playerPoints: this.startCard.pointValue, oppPoints: 0,
+      playerWins:0, oppWins:0, playerDefaultCards: [this.startCard],
       oppDefaultCards: [], playerDeck: fillPlayerHands(), oppDeck:fillPlayerHands(),
       playerIsStanding: false, oppIsStanding: false, gameOver : false});
   }
+
+  handleSubmit(event){
+    console.log(this.state.playerName);
+    if(this.state.playerName.length === 0){
+      this.setState({gameBegin: true, playerName: "Player 1"});
+    }
+    else{
+      this.setState({gameBegin: true})
+    }
+  }
+  handleChange(event){
+    this.setState({playerName: event.target.value});
+  }
+
   render(){
+    if(!this.state.gameBegin){
+      return(
+        <div style ={bgDiv}>
+          <div style = {playingBoard}>
+          <EnterName submit = {this.handleSubmit} onChange = {this.handleChange} value = {this.state.playerName}/>
+        </div>
+      </div>
+      )
+    }
     return(
       <div style = {bgDiv}>
         <div style = {playingBoard}>
@@ -508,10 +572,10 @@ export default class PlayPazzak extends Component {
           <table className = 'oppHand'>
             <tbody>
               <tr>
-                <td className = "tableData"><img src = {this.state.oppDeck[0].image} alt=""/></td>
-                <td className = "tableData"><img src = {this.state.oppDeck[1].image} alt=""/></td>
-                <td className = "tableData"><img src = {this.state.oppDeck[2].image} alt=""/></td>
-                <td className = "tableData"><img src = {this.state.oppDeck[3].image} alt=""/></td>
+                <td className = "tableData">{this.state.oppDeck[0].image !== null && <img src = {blankCard} alt=""/>}</td>
+                <td className = "tableData">{this.state.oppDeck[1].image !== null && <img src = {blankCard} alt=""/>}</td>
+                <td className = "tableData">{this.state.oppDeck[2].image !== null && <img src = {blankCard} alt=""/>}</td>
+                <td className = "tableData">{this.state.oppDeck[3].image !== null && <img src = {blankCard} alt=""/>}</td>
               </tr>
             </tbody>
           </table>
@@ -533,7 +597,6 @@ export default class PlayPazzak extends Component {
           <div style = {{float: "right", width: "47%", height: "100%", textAlign: "center"}}>
             {this.state.oppIsStanding && <Stands/>}
           </div>
-
         </div>
         <div>{this.state.gameOver && <NewGame winner = {this.whoWon} onClick = {this.newGame}/>}</div>
         </div>

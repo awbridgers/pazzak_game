@@ -182,3 +182,20 @@ left: -4px;
   color: white;
   text-align: center;
 }
+.enterName {
+  margin:auto;
+  background-color: red;
+  margin-top: auto;
+  position: relative;
+  top: 46%
+}
+
+.winner{
+  height: 150px;
+  width:400px;
+  margin: auto;
+  position: relative;
+  top: -500px;
+  color: white;
+  text-align: center;
+}
