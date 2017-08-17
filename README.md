@@ -16,6 +16,7 @@ It was made using [Create React App](https://github.com/facebookincubator/create
 ## Future updates
 * The game currently does not have "switch cards," or cards the players can play that have both a positive and negative value. These will hopefully be added in the future updates
 * The game currently assigns the players hand cards randomly from the list of all possible cards. In pazzak, a player typically selects a sidedeck of 10 cards, and 4 cards are selected from the users side deck.
+* A wager system would make the game resemble its namesake much more closely.
 
 
 ## Author
