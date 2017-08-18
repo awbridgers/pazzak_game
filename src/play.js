@@ -1,29 +1,29 @@
 import React, { Component } from 'react';
-import board from "../images/pazzakBoard2.png";
-import "../pazzakGame.css";
-import gameCardOne from "../images/cards/1.png";
-import gameCardTwo from "../images/cards/2.png";
-import gameCardThree from "../images/cards/3.png";
-import gameCardFour from "../images/cards/4.png";
-import gameCardFive from "../images/cards/5.png";
-import gameCardSix from "../images/cards/6.png";
-import gameCardSeven from "../images/cards/7.png";
-import gameCardEight from "../images/cards/8.png";
-import gameCardNine from "../images/cards/9.png";
-import gameCardTen from "../images/cards/10.png";
-import plusOne from "../images/cards/plus_1.png"
-import plusTwo from "../images/cards/plus_2.png"
-import plusThree from "../images/cards/plus_3.png"
-import plusFour from "../images/cards/plus_4.png"
-import plusFive from "../images/cards/plus_5.png"
-import plusSix from "../images/cards/plus_6.png"
-import minusOne from "../images/cards/minus_1.png"
-import minusTwo from "../images/cards/minus_2.png"
-import minusThree from "../images/cards/minus_3.png"
-import minusFour from "../images/cards/minus_4.png"
-import minusFive from "../images/cards/minus_5.png"
-import minusSix from "../images/cards/minus_6.png"
-import blankCard from "../images/cards/blankCard.png"
+import board from "./images/pazzakBoard2.png";
+import "./pazzakGame.css";
+import gameCardOne from "./images/cards/1.png";
+import gameCardTwo from "./images/cards/2.png";
+import gameCardThree from "./images/cards/3.png";
+import gameCardFour from "./images/cards/4.png";
+import gameCardFive from "./images/cards/5.png";
+import gameCardSix from "./images/cards/6.png";
+import gameCardSeven from "./images/cards/7.png";
+import gameCardEight from "./images/cards/8.png";
+import gameCardNine from "./images/cards/9.png";
+import gameCardTen from "./images/cards/10.png";
+import plusOne from "./images/cards/plus_1.png"
+import plusTwo from "./images/cards/plus_2.png"
+import plusThree from "./images/cards/plus_3.png"
+import plusFour from "./images/cards/plus_4.png"
+import plusFive from "./images/cards/plus_5.png"
+import plusSix from "./images/cards/plus_6.png"
+import minusOne from "./images/cards/minus_1.png"
+import minusTwo from "./images/cards/minus_2.png"
+import minusThree from "./images/cards/minus_3.png"
+import minusFour from "./images/cards/minus_4.png"
+import minusFive from "./images/cards/minus_5.png"
+import minusSix from "./images/cards/minus_6.png"
+import blankCard from "./images/cards/blankCard.png"
 
 
 let bgDiv = {width: "100%", height: "100%", backgroundColor: "black", position: "fixed"};
