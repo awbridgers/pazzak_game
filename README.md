@@ -1,6 +1,7 @@
 # Pazzak
 This project is a react based recreation of the game **Pazzak** from *Knights of the Old Republic*
 It was made using [Create React App](https://github.com/facebookincubator/create-react-app) to automate the build process. The game board and the template for the cards came from [Pazzak.org](http://www.pazaak.org).
+You can play the game [here](https://awbridgers.github.io/pazzak_game/)
 ***
 ## How to play
 * The goal of the game is to finish the round with more points than your opponent. If a player ends their turn or stands with over 20 points, they lose.
