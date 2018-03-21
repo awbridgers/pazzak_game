@@ -168,7 +168,8 @@ export default class Online extends Component {
     this.state = {playerPoints: this.startCard.pointValue, oppPoints: 0, playerName: "",
       oppName: "Darth Nihilus", playerWins:0, oppWins:0, playerDefaultCards: [this.startCard],
       oppDefaultCards: [], playerDeck: fillPlayerHands(), oppDeck:fillPlayerHands(),
-      playerIsStanding: false, oppIsStanding: false, gameOver : false, gameBegin: false, loggedIn: false};
+      playerIsStanding: false, oppIsStanding: false, gameOver : false, gameBegin: false, loggedIn: false,
+      username: "", password:""};
     this.playersTurn = true;
     this.playerStands = false;
     this.opponentStands = false;
@@ -185,6 +186,10 @@ export default class Online extends Component {
     this.newGame = this.newGame.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handleChange = this.handleChange.bind(this);
+    this.changeUser = this.changeUser.bind(this);
+    this.changePass = this.changePass.bind(this);
+    this.handleLogin = this.handleLogin.bind(this);
+    this.logOut = this.logOut.bind(this);
     this.app = firebase.database().ref('PlayerLobby');
 
 
@@ -386,13 +391,46 @@ export default class Online extends Component {
   handleChange(event){
     this.setState({playerName: event.target.value});
   }
+  changeUser(e){
+    this.setState({username:e.target.value});
+  }
+  changePass(e){
+    this.setState({password:e.target.value});
+  }
+  handleLogin(e){
+    e.preventDefault()
+    e.stopPropagation();
+    console.log(this.state.username, this.state.password);
+    firebase.auth().signInWithEmailAndPassword(this.state.username + "@pazzak.com", this.state.password).then(()=>{
+      console.log("Signed In!");
+      this.setState({loggedIn:true});
+    }
+    ).catch((error)=>{
+      // Handle Errors here.
+      var errorCode = error.code;
+      var errorMessage = error.message;
+      if (errorCode === 'auth/wrong-password') {
+        alert('Wrong password.');
+      } else {
+        alert(errorMessage);
+      }
+    });
+  }
+  logOut(){
+    firebase.auth().signOut().then(()=>this.setState({username: "", password: "", loggedIn:false,
+      playerPoints: this.startCard.pointValue, oppPoints: 0,
+        playerWins:0, oppWins:0, playerDefaultCards: [this.startCard],
+        oppDefaultCards: [], playerDeck: fillPlayerHands(), oppDeck:fillPlayerHands(),
+        playerIsStanding: false, oppIsStanding: false, gameOver : false}))
+  }
 
   render(){
     if(!this.state.loggedIn){
       return(
         <div style ={bgDiv}>
           <div style = {playingBoard}>
-          <LogIn/>
+          <LogIn username = {this.state.username} password = {this.state.password} changeUser = {this.changeUser}
+            changePass = {this.changePass} handleLogin = {this.handleLogin}/>
         </div>
       </div>
       )
@@ -400,12 +438,13 @@ export default class Online extends Component {
     return(
       <div style = {bgDiv}>
         <div style = {playingBoard}>
+          <button className = "signOut" onClick = {this.logOut}>Sign Out</button>
           <div className = "points">
             <div className = "playerPoints">{this.state.playerPoints}</div>
             <div className = "oppPoints">{this.state.oppPoints}</div>
           </div>
           <div className = "names">
-            <div className = "playerName">{this.state.playerName}</div>
+            <div className = "playerName">{this.state.username}</div>
             <div className = "oppName">{this.state.oppName}</div>
           </div>
         <div className = "score">

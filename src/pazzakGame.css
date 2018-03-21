@@ -218,11 +218,14 @@ left: -4px;
 
 .logIn{
   margin: auto;
+  left:0px;
+  right:0px;
   color: white;
-  position: relative;
+  position: absolute;
   top: 20%;
-  height: 200px;
+  height: 250px;
   width: 450px;
   background-color: #06287e;
   text-align: center;
+
 }
