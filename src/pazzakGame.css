@@ -199,3 +199,30 @@ left: -4px;
   color: white;
   text-align: center;
 }
+
+
+.signOut{
+  height: 25px;
+  width: 75px;
+  background-color: #4169E1;
+  position: absolute;
+  top: 0px;
+  right: 5px;
+}
+.signOut:hover{
+  background-color: #87CEEB;
+}
+.signOut:active{
+  background-color: #708090;
+}
+
+.logIn{
+  margin: auto;
+  color: white;
+  position: relative;
+  top: 20%;
+  height: 200px;
+  width: 450px;
+  background-color: #06287e;
+  text-align: center;
+}

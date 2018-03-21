@@ -25,6 +25,7 @@ import minusFive from "./images/cards/minus_5.png"
 import minusSix from "./images/cards/minus_6.png"
 import blankCard from "./images/cards/blankCard.png"
 import * as firebase from 'firebase'
+import LogIn from './logIn.jsx';
 
 
 let bgDiv = {width: "100%", height: "100%", backgroundColor: "black", position: "fixed"};
@@ -167,7 +168,7 @@ export default class Online extends Component {
     this.state = {playerPoints: this.startCard.pointValue, oppPoints: 0, playerName: "",
       oppName: "Darth Nihilus", playerWins:0, oppWins:0, playerDefaultCards: [this.startCard],
       oppDefaultCards: [], playerDeck: fillPlayerHands(), oppDeck:fillPlayerHands(),
-      playerIsStanding: false, oppIsStanding: false, gameOver : false, gameBegin: false};
+      playerIsStanding: false, oppIsStanding: false, gameOver : false, gameBegin: false, loggedIn: false};
     this.playersTurn = true;
     this.playerStands = false;
     this.opponentStands = false;
@@ -185,6 +186,7 @@ export default class Online extends Component {
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.app = firebase.database().ref('PlayerLobby');
+
 
   }
 
@@ -386,11 +388,11 @@ export default class Online extends Component {
   }
 
   render(){
-    if(!this.state.gameBegin){
+    if(!this.state.loggedIn){
       return(
         <div style ={bgDiv}>
           <div style = {playingBoard}>
-          <EnterName submit = {this.handleSubmit} onChange = {this.handleChange} value = {this.state.playerName}/>
+          <LogIn/>
         </div>
       </div>
       )
