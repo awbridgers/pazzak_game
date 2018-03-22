@@ -183,11 +183,15 @@ left: -4px;
   text-align: center;
 }
 .enterName {
-  margin:auto;
-  background-color: red;
-  margin-top: auto;
-  position: relative;
-  top: 46%
+  margin: auto;
+  left:0px;
+  right:0px;
+  position: absolute;
+  top: 20%;
+  height: 250px;
+  width: 450px;
+  background-color: #06287e;
+  text-align: center;
 }
 
 .winner{

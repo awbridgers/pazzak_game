@@ -26,6 +26,7 @@ import minusSix from "./images/cards/minus_6.png"
 import blankCard from "./images/cards/blankCard.png"
 import * as firebase from 'firebase'
 import LogIn from './logIn.jsx';
+import Loading from 'react-loading-animation';
 
 
 let bgDiv = {width: "100%", height: "100%", backgroundColor: "black", position: "fixed"};
@@ -142,20 +143,20 @@ export class Winner extends Component {
   }
 }
 
-export class EnterName extends Component{
+export class SearchGames extends Component{
   render(){
     return <div className = "enterName">
-      <form onSubmit = {this.props.submit}>
-        <label style = {{textAlign: "center"}}><h1>Enter Your Name:
-        <input type = "text" style = {{height: "30px", width: "300px",
-          fontWeight: "bold", position: "relative", top: "-4px", fontSize: "16px"}}
-          onChange = {this.props.onChange} value = {this.props.value}></input>
-        </h1></label>
-      <button type = 'button' style = {{width:"90px",
-          height: "40px", position: "relative", display: "block", margin: "auto",
-          borderRadius: "8px", background:"white", fontSize: "16px" }}
-          onClick = {this.props.submit}>Submit</button>
-      </form>
+      <div style = {{float: "left", height:"250px", width: "50%" }}>
+      <button type = 'button' style = {{width:"150px",
+          height: "75px", position: "relative", margin: "auto",
+          borderRadius: "8px", background:"white", fontSize: "16px",left:"25px", top: "87px"}}
+          onClick = {this.props.submit}>Create a Game</button>
+        </div>
+        <div style = {{float:"right", height:"250px", width: "50%" }}>
+          <button type = 'button' style = {{width:"150px",
+              height: "75px", position: "relative", margin: "auto",
+              borderRadius: "8px", background:"white", fontSize: "16px", right: "25px", top: "87px"}}
+              onClick = {this.props.submit}>Search For Games</button></div>
     </div>
   }
 }
@@ -168,8 +169,8 @@ export default class Online extends Component {
     this.state = {playerPoints: this.startCard.pointValue, oppPoints: 0, playerName: "",
       oppName: "Darth Nihilus", playerWins:0, oppWins:0, playerDefaultCards: [this.startCard],
       oppDefaultCards: [], playerDeck: fillPlayerHands(), oppDeck:fillPlayerHands(),
-      playerIsStanding: false, oppIsStanding: false, gameOver : false, gameBegin: false, loggedIn: false,
-      username: "", password:""};
+      playerIsStanding: false, oppIsStanding: false, gameOver : false, searchBegin: false, loggedIn: false,
+      username: "username", password:"password", gameJoined: false};
     this.playersTurn = true;
     this.playerStands = false;
     this.opponentStands = false;
@@ -190,7 +191,7 @@ export default class Online extends Component {
     this.changePass = this.changePass.bind(this);
     this.handleLogin = this.handleLogin.bind(this);
     this.logOut = this.logOut.bind(this);
-    this.app = firebase.database().ref('PlayerLobby');
+    this.gamesList = firebase.database().ref('gamesList');
 
 
   }
@@ -380,13 +381,12 @@ export default class Online extends Component {
 
   handleSubmit(event){
     console.log(this.state.playerName);
-    this.app.push({"username":this.state.playerName});
-    if(this.state.playerName.length === 0){
-      this.setState({gameBegin: true, playerName: "Player 1"});
+    let newGame = {
+      "creator": {uid:firebase.auth().currentUser.uid, username: this.state.username},
+      "state": "open"
     }
-    else{
-      this.setState({gameBegin: true})
-    }
+    this.gamesList.push(newGame);
+    this.setState({searchBegin: true})
   }
   handleChange(event){
     this.setState({playerName: event.target.value});
@@ -433,6 +433,27 @@ export default class Online extends Component {
             changePass = {this.changePass} handleLogin = {this.handleLogin}/>
         </div>
       </div>
+      )
+    }
+    if(this.state.loggedIn && !this.state.searchBegin){
+      return(
+        <div style ={bgDiv}>
+          <div style = {playingBoard}>
+          <SearchGames submit = {this.handleSubmit} />
+        </div>
+      </div>
+      )
+    }
+    if(this.state.loggedIn && this.state.searchBegin && !this.state.gameJoined){
+      return(
+        <div style ={bgDiv}>
+          <div style = {playingBoard}>
+            <div className = "logIn">
+              <h1>Waiting for Opponent</h1>
+              <p><Loading /></p>
+            </div>
+          </div>
+        </div>
       )
     }
     return(
