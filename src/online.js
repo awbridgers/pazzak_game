@@ -27,6 +27,7 @@ import blankCard from "./images/cards/blankCard.png"
 import * as firebase from 'firebase'
 import LogIn from './logIn.jsx';
 import Loading from 'react-loading-animation';
+import { Scrollbars } from 'react-custom-scrollbars';
 
 
 let bgDiv = {width: "100%", height: "100%", backgroundColor: "black", position: "fixed"};
@@ -38,6 +39,8 @@ class gameCards {
     this.image = picture;
   }
 }
+
+
 
 //a simple method to populate the deckArray
 const fillDeck = () => {
@@ -156,7 +159,7 @@ export class SearchGames extends Component{
           <button type = 'button' style = {{width:"150px",
               height: "75px", position: "relative", margin: "auto",
               borderRadius: "8px", background:"white", fontSize: "16px", right: "25px", top: "87px"}}
-              onClick = {this.props.submit}>Search For Games</button></div>
+              onClick = {this.props.findGames}>Search For Games</button></div>
     </div>
   }
 }
@@ -170,7 +173,7 @@ export default class Online extends Component {
       oppName: "Darth Nihilus", playerWins:0, oppWins:0, playerDefaultCards: [this.startCard],
       oppDefaultCards: [], playerDeck: fillPlayerHands(), oppDeck:fillPlayerHands(),
       playerIsStanding: false, oppIsStanding: false, gameOver : false, searchBegin: false, loggedIn: false,
-      username: "username", password:"password", gameJoined: false};
+      username: "username", password:"password", gameJoined: false, gameList:[], createdGame: false};
     this.playersTurn = true;
     this.playerStands = false;
     this.opponentStands = false;
@@ -191,6 +194,8 @@ export default class Online extends Component {
     this.changePass = this.changePass.bind(this);
     this.handleLogin = this.handleLogin.bind(this);
     this.logOut = this.logOut.bind(this);
+    this.findGames = this.findGames.bind(this);
+    this.joinGame = this.joinGame.bind(this);
     this.gamesList = firebase.database().ref('gamesList');
 
 
@@ -386,7 +391,7 @@ export default class Online extends Component {
       "state": "open"
     }
     this.gamesList.push(newGame);
-    this.setState({searchBegin: true})
+    this.setState({createdGame: true})
   }
   handleChange(event){
     this.setState({playerName: event.target.value});
@@ -423,6 +428,20 @@ export default class Online extends Component {
         oppDefaultCards: [], playerDeck: fillPlayerHands(), oppDeck:fillPlayerHands(),
         playerIsStanding: false, oppIsStanding: false, gameOver : false}))
   }
+  findGames(){
+    this.gamesList.once("value").then((snapshot)=>{
+      let currentGames = [];
+      snapshot.forEach((childSnapshot)=>{
+        let game = {gameID:childSnapshot.key, game: childSnapshot.val()}
+        currentGames.push(game);
+        console.log(game)
+      })
+      this.setState({gameList: currentGames, searchBegin: true})
+    })
+  }
+  joinGame(e){
+    console.log(e.target.value);
+  }
 
   render(){
     if(!this.state.loggedIn){
@@ -435,22 +454,43 @@ export default class Online extends Component {
       </div>
       )
     }
-    if(this.state.loggedIn && !this.state.searchBegin){
+    if(!this.state.createdGame && !this.state.searchBegin){
       return(
         <div style ={bgDiv}>
           <div style = {playingBoard}>
-          <SearchGames submit = {this.handleSubmit} />
+          <SearchGames submit = {this.handleSubmit} findGames = {this.findGames} />
         </div>
       </div>
       )
     }
-    if(this.state.loggedIn && this.state.searchBegin && !this.state.gameJoined){
+    if(this.state.createdGame && !this.state.gameJoined){
       return(
         <div style ={bgDiv}>
           <div style = {playingBoard}>
             <div className = "logIn">
               <h1>Waiting for Opponent</h1>
-              <p><Loading /></p>
+              <Loading />
+            </div>
+          </div>
+        </div>
+      )
+    }
+    if(this.state.searchBegin && !this.state.gameJoined){
+      return(
+        <div style ={bgDiv}>
+          <div style = {playingBoard}>
+            <div className = "gamesList">
+              <h1>Current Games:</h1>
+              <p>Click on a user to join their game!</p>
+              <Scrollbars style = {{height: "375px", width: "450px"}}>
+              {this.state.gameList.map((x,i)=>{
+                return(
+                  <p key ={i}>
+                  <button className = "gameButton" value = {x.gameID} onClick ={this.joinGame}>{x.game.creator.username}</button>
+                  </p>
+                )
+              })}
+              </Scrollbars>
             </div>
           </div>
         </div>

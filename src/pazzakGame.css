@@ -231,5 +231,22 @@ left: -4px;
   width: 450px;
   background-color: #06287e;
   text-align: center;
+}
 
+.gamesList{
+  margin: auto;
+  left:0px;
+  right:0px;
+  color: white;
+  position: absolute;
+  top: 10%;
+  height: 500px;
+  width: 450px;
+  background-color: #06287e;
+  text-align: center;
+}
+
+.gameButton{
+  height: 50px;
+  width: 200px;
 }
