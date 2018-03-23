@@ -196,7 +196,9 @@ export default class Online extends Component {
     this.logOut = this.logOut.bind(this);
     this.findGames = this.findGames.bind(this);
     this.joinGame = this.joinGame.bind(this);
+    this.cancelGame = this.cancelGame.bind(this);
     this.gamesList = firebase.database().ref('gamesList');
+    this.gameLocation = null;
 
 
   }
@@ -385,12 +387,13 @@ export default class Online extends Component {
   }
 
   handleSubmit(event){
-    console.log(this.state.playerName);
+    let newRef = this.gamesList.push()
+    this.createdGameKey = newRef.key;
     let newGame = {
       "creator": {uid:firebase.auth().currentUser.uid, username: this.state.username},
       "state": "open"
     }
-    this.gamesList.push(newGame);
+    newRef.set(newGame);
     this.setState({createdGame: true})
   }
   handleChange(event){
@@ -434,13 +437,32 @@ export default class Online extends Component {
       snapshot.forEach((childSnapshot)=>{
         let game = {gameID:childSnapshot.key, game: childSnapshot.val()}
         currentGames.push(game);
-        console.log(game)
+        //console.log(game)
       })
       this.setState({gameList: currentGames, searchBegin: true})
     })
   }
   joinGame(e){
-    console.log(e.target.value);
+    let gameKey = e.target.value;
+    console.log(gameKey)
+    this.gameLocation = this.gamesList.child(gameKey);
+    this.gameLocation.transaction((game)=>{
+      if(!game){
+        return game
+      }
+      if(game){
+        if(!game.joiner){
+          game.joiner = {uid: firebase.auth().currentUser.uid, username: this.state.username};
+          game.state = "joined";
+        }
+        return game;
+      }
+    })
+  }
+  cancelGame(){
+    let deleteRef = this.gamesList.child(this.createdGameKey);
+    deleteRef.remove();
+    this.setState({createdGame: false});
   }
 
   render(){
@@ -470,18 +492,25 @@ export default class Online extends Component {
             <div className = "logIn">
               <h1>Waiting for Opponent</h1>
               <Loading />
+              <button style = {{width:"90px",height: "40px", position: "relative", margin: "auto",
+                  borderRadius: "8px", background:"white", fontSize: "16px", top: "75px" }}
+                  onClick = {this.cancelGame}>Cancel</button>
             </div>
           </div>
         </div>
       )
     }
     if(this.state.searchBegin && !this.state.gameJoined){
+      let message = "Click on a user to join their game!"
+      if(this.state.gameList.length ===0){
+        message = "No Games Available"
+      }
       return(
         <div style ={bgDiv}>
           <div style = {playingBoard}>
             <div className = "gamesList">
               <h1>Current Games:</h1>
-              <p>Click on a user to join their game!</p>
+              <p>{message}</p>
               <Scrollbars style = {{height: "375px", width: "450px"}}>
               {this.state.gameList.map((x,i)=>{
                 return(
