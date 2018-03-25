@@ -170,10 +170,11 @@ export default class Online extends Component {
     this.pazzakDeck = fillDeck();
     this.startCard = this.pazzakDeck[Math.floor(Math.random()*10)];
     this.state = {playerPoints: this.startCard.pointValue, oppPoints: 0, playerName: "",
-      oppName: "Darth Nihilus", playerWins:0, oppWins:0, playerDefaultCards: [this.startCard],
+      oppName: "", playerWins:0, oppWins:0, playerDefaultCards: [this.startCard],
       oppDefaultCards: [], playerDeck: fillPlayerHands(), oppDeck:fillPlayerHands(),
       playerIsStanding: false, oppIsStanding: false, gameOver : false, searchBegin: false, loggedIn: false,
-      username: "username", password:"password", gameJoined: false, gameList:[], createdGame: false};
+      username: "username", password:"password", gameJoined: false, gameList:[], createdGame: false,gameKey: null,
+      role: null, loading: false};
     this.playersTurn = true;
     this.playerStands = false;
     this.opponentStands = false;
@@ -188,7 +189,7 @@ export default class Online extends Component {
     this.determineWinner = this.determineWinner.bind(this);
     this.newRound = this.newRound.bind(this);
     this.newGame = this.newGame.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
+    this.createGame = this.createGame.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.changeUser = this.changeUser.bind(this);
     this.changePass = this.changePass.bind(this);
@@ -204,6 +205,38 @@ export default class Online extends Component {
   }
 
   componentDidUpdate(){
+    if(this.state.gameJoined){
+      this.creator = this.gamesList.child(this.state.gameKey + "/creator");
+      this.joiner = this.gamesList.child(this.state.gameKey + "/joiner");
+      this.joiner.once('value').then((snapshot)=>console.log(snapshot.val()));
+
+
+      if(this.state.role === 'creator' && this.state.oppName === ""){
+        this.createdGameRef.off();
+        this.joiner.once('value').then((snapshot)=>{
+          console.log(snapshot.val())
+          let opponentsUsername = snapshot.val().username;
+          this.setState({oppName: opponentsUsername});
+        });
+      }
+      if(this.state.role === 'joiner' && this.state.oppName === ""){
+        this.creator.once('value').then((snapshot)=>{
+          console.log(snapshot.val())
+          let opponentsUsername = snapshot.val().username;
+          this.setState({oppName: opponentsUsername});
+        });
+      }
+
+
+    }
+    if(this.state.createdGame && !this.state.gameJoined){
+      this.createdGameRef = this.gamesList.child(this.state.gameKey);
+      this.createdGameRef.on('value',(snapshot)=>{
+        if(snapshot.val().state === 'joined'){
+          this.setState({gameJoined: true});
+        }
+      })
+    }
   }
 
   determineWinner(){
@@ -386,15 +419,16 @@ export default class Online extends Component {
       playerIsStanding: false, oppIsStanding: false, gameOver : false});
   }
 
-  handleSubmit(event){
+  createGame(event){
     let newRef = this.gamesList.push()
-    this.createdGameKey = newRef.key;
+    let createdGameKey = newRef.key;
     let newGame = {
-      "creator": {uid:firebase.auth().currentUser.uid, username: this.state.username},
+      "creator": {uid:firebase.auth().currentUser.uid, username: this.state.username,
+    gameInfo: {stands: false, playedCard: false, playerCardsRemaining: 4, playerCardUsed: 0, gameCardPlayed: 0}},
       "state": "open"
     }
     newRef.set(newGame);
-    this.setState({createdGame: true})
+    this.setState({createdGame: true, gameKey: createdGameKey, role: 'creator'});
   }
   handleChange(event){
     this.setState({playerName: event.target.value});
@@ -458,11 +492,16 @@ export default class Online extends Component {
         return game;
       }
     })
+    this.setState({role: 'joiner', gameKey: gameKey, loading: true});
+    this.loadGame();
   }
   cancelGame(){
-    let deleteRef = this.gamesList.child(this.createdGameKey);
+    let deleteRef = this.gamesList.child(this.state.gameKey);
     deleteRef.remove();
     this.setState({createdGame: false});
+  }
+  loadGame(){
+    setTimeout(()=>this.setState({loading:false, gameJoined:true}),2000);
   }
 
   render(){
@@ -476,11 +515,23 @@ export default class Online extends Component {
       </div>
       )
     }
+    if(this.state.loading){
+      return(
+        <div style ={bgDiv}>
+          <div style = {playingBoard}>
+            <div className = "gamesList">
+              <h1>Attempting to join game</h1>
+              <Loading />
+              </div>
+            </div>
+          </div>
+      )
+    }
     if(!this.state.createdGame && !this.state.searchBegin){
       return(
         <div style ={bgDiv}>
           <div style = {playingBoard}>
-          <SearchGames submit = {this.handleSubmit} findGames = {this.findGames} />
+          <SearchGames submit = {this.createGame} findGames = {this.findGames} />
         </div>
       </div>
       )
@@ -525,6 +576,7 @@ export default class Online extends Component {
         </div>
       )
     }
+
     return(
       <div style = {bgDiv}>
         <div style = {playingBoard}>
