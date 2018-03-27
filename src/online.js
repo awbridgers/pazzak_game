@@ -59,26 +59,41 @@ const fillDeck = () => {
 }
 
 //a simple function to fill the players hands with random +/-cards, will change later
-const fillPlayerHands = () => {
+const fillPlayerHands = (type) => {
   let possibleCards = [];
   let returnedHand =[];
+  possibleCards.push(new gameCards(-6, minusSix));
+  possibleCards.push(new gameCards(-5, minusFive));
+  possibleCards.push(new gameCards(-4, minusFour));
+  possibleCards.push(new gameCards(-3, minusThree));
+  possibleCards.push(new gameCards(-2, minusTwo));
+  possibleCards.push(new gameCards(-1, minusOne));
   possibleCards.push(new gameCards(1, plusOne));
   possibleCards.push(new gameCards(2, plusTwo));
   possibleCards.push(new gameCards(3, plusThree));
   possibleCards.push(new gameCards(4, plusFour));
   possibleCards.push(new gameCards(5, plusFive));
   possibleCards.push(new gameCards(6, plusSix));
-  possibleCards.push(new gameCards(-1, minusOne));
-  possibleCards.push(new gameCards(-2, minusTwo));
-  possibleCards.push(new gameCards(-3, minusThree));
-  possibleCards.push(new gameCards(-4, minusFour));
-  possibleCards.push(new gameCards(-5, minusFive));
-  possibleCards.push(new gameCards(-6, minusSix));
-  for(let i=0; i<=3; i++){
-    returnedHand.push(Object.assign({},possibleCards[Math.floor(Math.random()*possibleCards.length)]));
-  }
-  return returnedHand;
+  if(type === "random"){
+    for(let i=0; i<=3; i++){
+      returnedHand.push(Object.assign({},possibleCards[Math.floor(Math.random()*possibleCards.length)]));
     }
+    return returnedHand;
+    }
+    else{
+      return possibleCards;
+    }
+  }
+
+  const getPlayerCard = (array, number) =>{
+    if(number < 0){
+      return array[number+6];
+    }
+    else if (number > 0){
+      return array[number + 5];
+    }
+  }
+
 
 //a function to iterate over the opponents hand and return the index of a card to play
 //based on a hierarchy of what the opponenent needs to do to win the game
@@ -168,15 +183,18 @@ export default class Online extends Component {
   constructor(){
     super();
     this.pazzakDeck = fillDeck();
+    this.playableDeck = fillPlayerHands("ttbt");
     this.state = {playerPoints:0, oppPoints: 0, playerName: "",
       oppName: "", playerWins:0, oppWins:0, playerDefaultCards: [],
-      oppDefaultCards: [], playerDeck: fillPlayerHands(), oppDeck:fillPlayerHands(),
+      oppDefaultCards: [], playerDeck: fillPlayerHands('random'), oppDeck:fillPlayerHands('random'),
       playerIsStanding: false, oppIsStanding: false, gameOver : false, searchBegin: false, loggedIn: false,
       username: "username", password:"password", gameJoined: false, gameList:[], createdGame: false,gameKey: null,
-      role: null, loading: false, gameStarted: false, gameConnected: false, creatorTurn: false, playRandomCard: true};
-    this.playersTurn = true;
+      role: null, loading: false, gameStarted: false, gameConnected: false, creatorTurn: false, playRandomCard: true,
+      oppPlayedCard: false, oppCardsRemaining: 4};
+    this.playersTurn = false;
     this.playerStands = false;
     this.opponentStands = false;
+    this.whoseTurn = "joiner";
     this.roundOver = false;
     this.userPlayedCard = false;
     this.whoWon = null;
@@ -200,24 +218,49 @@ export default class Online extends Component {
     this.cancelGame = this.cancelGame.bind(this);
     this.gamesList = firebase.database().ref('gamesList');
     this.gameLocation = null;
+    this.update = false;
+
 
 
   }
 
   componentDidUpdate(){
-    if(this.state.gameConnected && !this.state.creatorTurn && this.state.playRandomCard){    //if it is the joiner's turn
-      if(this.state.role === 'joiner'){
-        this.playerGo();        //the joiner has their Turn
-      }
-      if(this.state.role === 'creator'){
-        this.joiner.on('child_changed', (snapshot)=>{             //the creator listens for the update to the joiners info
-          console.log(snapshot.val().gameCardPlayed);
-        })
-      }
+
+    if(this.state.gameConnected && this.state.playRandomCard){
+      this.gameStatus.on('value', (snapshot) =>{
+        if(snapshot.val() === "joinerTurn" && this.state.role === 'joiner'){
+          this.playerGo();
+          this.gameStatus.off();
+        }
+        else if (snapshot.val() === "creatorTurn"){
+          this.update = true;
+          this.playerGo();
+        }
+      })
     }
+    // if(this.state.gameConnected && !this.state.creatorTurn && this.state.playRandomCard){    //if it is the joiner's turn
+    //   this.joiner.off();
+    //   if(this.state.role === 'joiner'){
+    //     this.playerGo();        //the joiner has their Turn
+    //   }
+    //   if(this.state.role === 'creator'){
+    //   this.(snapshot)=>{             //the creator listens for the update to the joiners info
+    //       if(snapshot.)
+    //       this.setState({oppDefaultCards: [...this.state.oppDefaultCards,this.pazzakDeck[snapshot.val().gameCardPlayed-1]],
+    //         oppPlayedCard:snapshot.val().playedCard,
+    //         oppCardsRemaining:snapshot.val().playerCardsRemaining,
+    //         oppIsStanding: snapshot.val().stands,
+    //         creatorTurn: true,
+    //         playRandomCard:true});
+    //         this.playersTurn = true;
+    //     })
+    //   }
+    // }
     if(this.state.gameJoined){
       this.creator = this.gamesList.child(this.state.gameKey + "/creator");
       this.joiner = this.gamesList.child(this.state.gameKey + "/joiner");
+      this.gameStatus = this.gamesList.child(this.state.gameKey + "/state");
+      this.gamesList.child(this.state.gameKey).update({state:"joinerTurn"})
 
 
 
@@ -231,7 +274,7 @@ export default class Online extends Component {
       }
       if(this.state.role === 'joiner' && this.state.oppName === ""){
         this.creator.once('value').then((snapshot)=>{
-          console.log(snapshot.val())
+          //console.log(snapshot.val())
           let opponentsUsername = snapshot.val().username;
           this.setState({oppName: opponentsUsername, gameBegin: true, gameJoined: false, gameConnected:true});
         });
@@ -248,7 +291,61 @@ export default class Online extends Component {
 
   }
 
+  updateInfo(){
+    console.log("updating");
+    if(this.state.role === 'joiner'){
+      this.creator.once('value').then((snapshot) => {
+        let pointsAdded = 0;
+        let playerCard = null
 
+        if(snapshot.val().gameInfo.playedCard){
+          pointsAdded = snapshot.val().gameInfo.playerCardUsed;
+          this.setState({oppDefaultCards: [...this.state.oppDefaultCards,this.pazzakDeck[snapshot.val().gameInfo.gameCardPlayed-1],
+          this.playableDeck[getPlayerCard(this.playableDeck, snapshot.val().gameInfo.playerCardUsed)]],
+            oppPlayedCard:snapshot.val().gameInfo.playedCard,
+            oppCardsRemaining:snapshot.val().gameInfo.playerCardsRemaining,
+            oppIsStanding: snapshot.val().gameInfo.stands,
+            oppPoints: snapshot.val().gameInfo.gameCardPlayed + snapshot.val().gameInfo.playerCardUsed,
+          })
+      }
+
+      else if(!snapshot.val().gameInfo.playedCard){
+        pointsAdded = snapshot.val().gameInfo.playerCardUsed;
+        this.setState({oppDefaultCards: [...this.state.oppDefaultCards,this.pazzakDeck[snapshot.val().gameInfo.gameCardPlayed-1]],
+          oppPlayedCard:snapshot.val().gameInfo.playedCard,
+          oppCardsRemaining:snapshot.val().gameInfo.playerCardsRemaining,
+          oppIsStanding: snapshot.val().gameInfo.stands,
+          oppPoints: snapshot.val().gameInfo.gameCardPlayed,
+          })
+        }
+      })
+    }
+    else if(this.state.role === 'creator'){
+      this.joiner.once('value').then((snapshot) => {
+        let pointsAdded = 0;
+        if(snapshot.val().gameInfo.playedCard){
+          pointsAdded = snapshot.val().gameInfo.playerCardUsed;
+          this.setState({oppDefaultCards: [...this.state.oppDefaultCards,...[this.pazzakDeck[snapshot.val().gameInfo.gameCardPlayed-1],
+            getPlayerCard(this.playableDeck, snapshot.val().gameInfo.playerCardUsed)]],
+            oppPlayedCard:snapshot.val().gameInfo.playedCard,
+            oppCardsRemaining:snapshot.val().gameInfo.playerCardsRemaining,
+            oppIsStanding: snapshot.val().gameInfo.stands,
+            oppPoints: snapshot.val().gameInfo.gameCardPlayed + snapshot.val().gameInfo.playerCardUsed,
+          })
+      }
+
+        else if(!snapshot.val().gameInfo.playedCard){
+          pointsAdded = snapshot.val().gameInfo.playerCardUsed;
+          this.setState({oppDefaultCards: [...this.state.oppDefaultCards,this.pazzakDeck[snapshot.val().gameInfo.gameCardPlayed-1]],
+            oppPlayedCard:snapshot.val().gameInfo.playedCard,
+            oppCardsRemaining:snapshot.val().gameInfo.playerCardsRemaining,
+            oppIsStanding: snapshot.val().gameInfo.stands,
+            oppPoints: snapshot.val().gameInfo.gameCardPlayed,
+          })
+        }
+      })
+    }
+  }
   determineWinner(){
     let winner = null
     this.roundOver = true;
@@ -318,11 +415,14 @@ export default class Online extends Component {
 
   playerGo(){
     if(!this.playerStands){
+      if(this.update){
+        this.updateInfo();
+      }
         this.playersTurn = true;
         this.userPlayedCard = false;
         if(this.state.playerDefaultCards.length < 9){
           let random = Math.floor((Math.random() * 10));
-          console.log(random);
+          //console.log(random);
           if(this.state.playerPoints + this.pazzakDeck[random].pointValue === 20){
             this.firstTimeStand = true;
             this.playersTurn = false;
@@ -342,16 +442,31 @@ export default class Online extends Component {
     }
 
   endTurn(){
+    console.log(this.selectedPlayerCard);
     if(this.playersTurn && !this.playerStands){
+      console.log(this.userPlayedCard)
+      this.update = true;
       this.playersTurn = false;
-      let gameInfo = {gameCardPlayed: this.state.playerDefaultCards[this.state.playerDefaultCards.length-1].pointValue,
+      let points = 0;
+      if(this.userPlayedCard){
+
+        points = points + this.selectedPlayerCard.pointValue;
+      }
+      let subtractor = (this.userPlayedCard) ? 2 : 1;   //if user played a card, subtract 2 for the random card
+      let gameInfo = {gameCardPlayed: this.state.playerDefaultCards[this.state.playerDefaultCards.length-subtractor].pointValue,
         playedCard: this.userPlayedCard,
-        playerCardUsed: this.selectedPlayerCard,
+        playerCardUsed: points,
         playerCardsRemaining: this.state.playerDeck.length,
         stands: this.state.playerIsStanding
         }
+
       if(this.state.role === 'joiner'){
         this.gamesList.child(this.state.gameKey + "/joiner/gameInfo").update(gameInfo);
+        this.gamesList.child(this.state.gameKey).update({state:"creatorTurn"})
+      }
+      else if(this.state.role === 'creator'){
+        this.gamesList.child(this.state.gameKey + "/joiner/gameInfo").update(gameInfo);
+        this.gamesList.child(this.state.gameKey).update({state:"joinerTurn"})
       }
 
     }
@@ -360,7 +475,7 @@ export default class Online extends Component {
     }
   }
   playCard(event){
-    if(!this.userPlayedCard && !this.playerStands){             //if the users hasn't already played a card
+    if(!this.userPlayedCard && !this.playerStands && this.playersTurn){             //if the users hasn't already played a card
       //set this.userPlayedCard to true so they can't play another card
       this.userPlayedCard = true;
       //make copy of state arrays
@@ -368,7 +483,7 @@ export default class Online extends Component {
       const playArray = this.state.playerDefaultCards.slice();
       //make a copy of the selected card object
       this.selectedPlayerCard = Object.assign({}, tempArray[event.target.id]);
-      //console.log(selectedCard.pointValue)
+      console.log(this.selectedPlayerCard.pointValue)
       //push the new card onto the playing area
       playArray.push(this.selectedPlayerCard);
       //remove the img src from the player's deck
@@ -539,7 +654,7 @@ export default class Online extends Component {
           </div>
       )
     }
-    if(!this.state.createdGame && !this.state.searchBegin){
+    if(!this.state.createdGame && !this.state.searchBegin && !this.state.gameJoined){
       return(
         <div style ={bgDiv}>
           <div style = {playingBoard}>
@@ -563,7 +678,7 @@ export default class Online extends Component {
         </div>
       )
     }
-    if(this.state.searchBegin && !this.state.gameConnected){
+    if(this.state.searchBegin && !this.state.gameJoined && !this.state.gameConnected){
       let message = "Click on a user to join their game!"
       if(this.state.gameList.length ===0){
         message = "No Games Available"
