@@ -228,7 +228,6 @@ export default class Online extends Component {
   }
 
   componentDidUpdate(){
-
     if(this.state.gameConnected && !this.listenersAdded){
       this.addListeners();
     }
@@ -272,10 +271,9 @@ export default class Online extends Component {
   addListeners(){
     this.listenersAdded = true;
     this.gameStatus.on('value', (snapshot) =>{
+      //console.log("I feel a change in the wind says I")
       if(snapshot.val() === "joinerTurn" && this.state.role === 'joiner'){
-        console.log("active")
-          console.log("go")
-          this.playerGo();
+        this.playerGo();
       }
       else if (snapshot.val() === "creatorTurn" && this.state.role === 'creator'){
         this.update = true;
@@ -286,7 +284,7 @@ export default class Online extends Component {
   updateInfo(){
     console.log("updating");
     //if the player is the joiner
-    if(this.state.role === 'joiner'){
+    if(this.state.role === 'joiner' && !this.state.oppIsStanding){
       this.creator.once('value').then((snapshot) => {
       let pointsAdded = 0;
         //if the opponent played a card
@@ -313,7 +311,7 @@ export default class Online extends Component {
           })
         }
         //if the player is the creator
-        else if(this.state.role === 'creator'){
+        else if(this.state.role === 'creator' && !this.state.oppIsStanding){
           this.joiner.once('value').then((snapshot) => {
             let pointsAdded = 0;
             if(snapshot.val().gameInfo.playedCard){
@@ -374,39 +372,15 @@ export default class Online extends Component {
       }
     },500);
   }
-  // opponentTurn(){
-  //   if(this.state.oppDefaultCards.length < 9 && !this.state.oppIsStanding){
-  //     setTimeout(()=>{
-  //       let random = Math.floor(Math.random()*10);
-  //       //console.log(this.state.oppIsStanding);
-  //         this.setState({oppDefaultCards: this.state.oppDefaultCards.concat(this.pazzakDeck[random]),
-  //             oppPoints: this.state.oppPoints + this.pazzakDeck[random].pointValue});
-  //       this.oppPlayedCard = false;
-  //             //console.log(random);
-  //
-  //     },500);
-  //   }
-  //   else if(this.opponentStands){
-  //     this.playerTurn();      //if opponent stands go directly back to player Turn
-  //   }
-  // }
-  // opponentPlayCard(index){
-  //
-  //     let tempArray = this.state.oppDeck.slice();
-  //     let playThisCard = Object.assign({}, tempArray[index]);
-  //     //change the values to remove the card's image and point value
-  //     tempArray[index].pointValue = "";
-  //     tempArray[index].image = null;
-  //     //console.log(playThisCard.pointValue);
-  //     this.oppPlayedCard = true;
-  //     this.setState({oppDefaultCards: this.state.oppDefaultCards.concat(playThisCard),
-  //       oppPoints: this.state.oppPoints + playThisCard.pointValue,
-  //       oppDeck: tempArray});
-
-
-  // }
-
   playerGo(){
+    if(this.playerStands && this.state.role === 'joiner'){
+        this.updateInfo();
+        this.gamesList.child(this.state.gameKey).update({state:"creatorTurn"})
+    }
+    if(this.playerStands && this.state.role === "creator"){
+        this.updateInfo();
+        this.gamesList.child(this.state.gameKey).update({state:"joinerTurn"})
+    }
     if(!this.playerStands){
       if(this.update){
         this.updateInfo();
@@ -418,12 +392,10 @@ export default class Online extends Component {
           let random = Math.floor((Math.random() * 10));
           //console.log(random);
           if(this.state.playerPoints + this.pazzakDeck[random].pointValue === 20){
-            this.firstTimeStand = true;
-            this.playersTurn = false;
-            this.playerStands = true;
             this.playerIsReady = false;
             this.setState({playerDefaultCards: this.state.playerDefaultCards.concat(this.pazzakDeck[random]),
-              playerPoints: this.state.playerPoints + this.pazzakDeck[random].pointValue, playerIsStanding: true,playRandomCard:false});
+              playerPoints: this.state.playerPoints + this.pazzakDeck[random].pointValue,playRandomCard:false});
+              this.stand();
           }
           else{
             this.playerIsReady = false;
@@ -439,9 +411,8 @@ export default class Online extends Component {
   }
   endTurn(){
 
-    console.log(this.selectedPlayerCard);
     if(this.playersTurn && !this.playerStands){
-      console.log(this.userPlayedCard)
+      //console.log(this.userPlayedCard)
       this.update = true;
       this.playersTurn = false;
       let points = 0;
@@ -490,8 +461,9 @@ export default class Online extends Component {
         this.firstTimeStand = true;
         this.playersTurn = false;
         this.playerStands = true;
+        this.stand();
         this.setState({playerDeck: tempArray, playerDefaultCards: playArray,
-          playerPoints: this.state.playerPoints + this.selectedPlayerCard.pointValue, playerIsStanding: true});
+          playerPoints: this.state.playerPoints + this.selectedPlayerCard.pointValue});
         }
       else{
         this.setState({playerDeck: tempArray, playerDefaultCards: playArray,
@@ -512,10 +484,32 @@ export default class Online extends Component {
         //playerStands true blocks all other user plays
 
         this.firstTimeStand = true;
+        this.update = true;
         this.playersTurn = false;
         this.playerStands = true;
-        this.setState({playerIsStanding: true});
+        let points = 0;
+        if(this.userPlayedCard){
+          points = points + this.selectedPlayerCard.pointValue;
+        }
+        let subtractor = (this.userPlayedCard) ? 2 : 1;   //if user played a card, subtract 2 for the random card
+        let gameInfo = {gameCardPlayed: this.state.playerDefaultCards[this.state.playerDefaultCards.length-subtractor].pointValue,
+          playedCard: this.userPlayedCard,
+          playerCardUsed: points,
+          playerCardsRemaining: this.state.playerDeck.length,
+          stands: true
+          }
+
+        if(this.state.role === 'joiner'){
+          this.gamesList.child(this.state.gameKey + "/joiner/gameInfo").update(gameInfo);
+          this.gamesList.child(this.state.gameKey).update({state:"creatorTurn"})
+        }
+        else if(this.state.role === 'creator'){
+          this.gamesList.child(this.state.gameKey + "/creator/gameInfo").update(gameInfo);
+          this.gamesList.child(this.state.gameKey).update({state:"joinerTurn"})
+        }
+
       }
+        this.setState({playerIsStanding: true});
 
     }
     else{
