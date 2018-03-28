@@ -223,6 +223,7 @@ export default class Online extends Component {
     this.listenersAdded = false;
     this.playerIsReady = true;
     this.firstUpdate = true;
+    this.standPoints = 0;
 
 
   }
@@ -271,13 +272,29 @@ export default class Online extends Component {
   addListeners(){
     this.listenersAdded = true;
     this.gameStatus.on('value', (snapshot) =>{
-      //console.log("I feel a change in the wind says I")
+      if(snapshot.val() === "determineWinner"){
+        ("Decide the winner please")
+        this.determineWinner()
+      }
       if(snapshot.val() === "joinerTurn" && this.state.role === 'joiner'){
-        this.playerGo();
+        //if both players are standing, determine the winner
+        if(this.state.playerIsStanding && this.state.oppIsStanding){
+          this.updateInfo()
+          this.gamesList.child(this.state.gameKey).update({state:"determineWinner"})
+        }
+        else{
+          this.playerGo();
+        }
       }
       else if (snapshot.val() === "creatorTurn" && this.state.role === 'creator'){
-        this.update = true;
-        this.playerGo();
+        if(this.state.playerIsStanding && this.state.oppIsStanding){
+          this.updateInfo()
+          this.gamesList.child(this.state.gameKey).update({state:"determineWinner"})
+        }
+        else{
+          this.update = true;
+          this.playerGo();
+        }
       }
     })
   }
@@ -295,7 +312,7 @@ export default class Online extends Component {
             oppPlayedCard:snapshot.val().gameInfo.playedCard,
             oppCardsRemaining:snapshot.val().gameInfo.playerCardsRemaining,
             oppIsStanding: snapshot.val().gameInfo.stands,
-            oppPoints: this.state.oppPoints + snapshot.val().gameInfo.gameCardPlayed + snapshot.val().gameInfo.playerCardUsed,
+            oppPoints: snapshot.val().gameInfo.points
           })
         }
             //if the opponent did not play a card
@@ -305,7 +322,7 @@ export default class Online extends Component {
                 oppPlayedCard:snapshot.val().gameInfo.playedCard,
                 oppCardsRemaining:snapshot.val().gameInfo.playerCardsRemaining,
                 oppIsStanding: snapshot.val().gameInfo.stands,
-                oppPoints: this.state.oppPoints + snapshot.val().gameInfo.gameCardPlayed,
+                oppPoints: snapshot.val().gameInfo.points,
               })
             }
           })
@@ -321,7 +338,7 @@ export default class Online extends Component {
                 oppPlayedCard:snapshot.val().gameInfo.playedCard,
                 oppCardsRemaining:snapshot.val().gameInfo.playerCardsRemaining,
                 oppIsStanding: snapshot.val().gameInfo.stands,
-                oppPoints: this.state.oppPoints + snapshot.val().gameInfo.gameCardPlayed + snapshot.val().gameInfo.playerCardUsed,
+                oppPoints: snapshot.val().gameInfo.points,
               })
             }
 
@@ -331,13 +348,14 @@ export default class Online extends Component {
               oppPlayedCard:snapshot.val().gameInfo.playedCard,
               oppCardsRemaining:snapshot.val().gameInfo.playerCardsRemaining,
               oppIsStanding: snapshot.val().gameInfo.stands,
-              oppPoints: this.state.oppPoints + snapshot.val().gameInfo.gameCardPlayed,
+              oppPoints: snapshot.val().gameInfo.points,
             })
           }
         })
       }
     }
   determineWinner(){
+    console.log("determining winner")
     let winner = null
     this.roundOver = true;
     //if the user is over 20 and the opp is under, opp wins
@@ -359,16 +377,16 @@ export default class Online extends Component {
     }
     setTimeout(()=>{
       if(winner === "Player"){
-        alert("You win the round.")
+        alert(this.state.username + " wins the round!")
         this.setState({playerWins: this.state.playerWins + 1});
       }
       else if(winner === "Opponent"){
-        alert("Your opponent has won the round.")
+        alert(this.state.oppName + " wins the round!")
         this.setState({oppWins: this.state.oppWins + 1});
       }
       else{
         alert("Tie game.")
-        this.newRound();
+        //this.newRound();
       }
     },500);
   }
@@ -412,31 +430,37 @@ export default class Online extends Component {
   endTurn(){
 
     if(this.playersTurn && !this.playerStands){
-      //console.log(this.userPlayedCard)
-      this.update = true;
-      this.playersTurn = false;
-      let points = 0;
-      if(this.userPlayedCard){
-
-        points = points + this.selectedPlayerCard.pointValue;
+      //if you end turn with more than 20 points, you lose
+      if(this.state.playerPoints > 20){
+        this.gamesList.child(this.state.gameKey).update({state:"determineWinner"})
       }
-      let subtractor = (this.userPlayedCard) ? 2 : 1;   //if user played a card, subtract 2 for the random card
-      let gameInfo = {gameCardPlayed: this.state.playerDefaultCards[this.state.playerDefaultCards.length-subtractor].pointValue,
-        playedCard: this.userPlayedCard,
-        playerCardUsed: points,
-        playerCardsRemaining: this.state.playerDeck.length,
-        stands: this.state.playerIsStanding
+      else{
+        //console.log(this.userPlayedCard)
+        this.update = true;
+        this.playersTurn = false;
+        let points = 0;
+        if(this.userPlayedCard){
+
+          points = points + this.selectedPlayerCard.pointValue;
         }
+        let subtractor = (this.userPlayedCard) ? 2 : 1;   //if user played a card, subtract 2 for the random card
+        let gameInfo = {gameCardPlayed: this.state.playerDefaultCards[this.state.playerDefaultCards.length-subtractor].pointValue,
+          playedCard: this.userPlayedCard,
+          playerCardUsed: points,
+          playerCardsRemaining: this.state.playerDeck.length,
+          stands: this.state.playerIsStanding,
+          points: this.state.playerPoints
+          }
 
-      if(this.state.role === 'joiner'){
-        this.gamesList.child(this.state.gameKey + "/joiner/gameInfo").update(gameInfo);
-        this.gamesList.child(this.state.gameKey).update({state:"creatorTurn"})
+        if(this.state.role === 'joiner'){
+          this.gamesList.child(this.state.gameKey + "/joiner/gameInfo").update(gameInfo);
+          this.gamesList.child(this.state.gameKey).update({state:"creatorTurn"})
+        }
+        else if(this.state.role === 'creator'){
+          this.gamesList.child(this.state.gameKey + "/creator/gameInfo").update(gameInfo);
+          this.gamesList.child(this.state.gameKey).update({state:"joinerTurn"})
+        }
       }
-      else if(this.state.role === 'creator'){
-        this.gamesList.child(this.state.gameKey + "/creator/gameInfo").update(gameInfo);
-        this.gamesList.child(this.state.gameKey).update({state:"joinerTurn"})
-      }
-
     }
     else{
       console.log("not your turn");
@@ -459,11 +483,11 @@ export default class Online extends Component {
       //set the state
       if(this.state.playerPoints + this.selectedPlayerCard.pointValue === 20){
         this.firstTimeStand = true;
-        this.playersTurn = false;
         this.playerStands = true;
-        this.stand();
+        console.log("Stand Please")
         this.setState({playerDeck: tempArray, playerDefaultCards: playArray,
           playerPoints: this.state.playerPoints + this.selectedPlayerCard.pointValue});
+          setTimeout(()=>this.stand(),100);
         }
       else{
         this.setState({playerDeck: tempArray, playerDefaultCards: playArray,
@@ -477,8 +501,9 @@ export default class Online extends Component {
   }
   stand(){
     if(this.playersTurn && !this.state.playerIsStanding){
+      //if you stand with more than 20 points, you lose
       if(this.state.playerPoints > 20){
-        this.determineWinner();
+        console.log(this.state.playerPoints)
       }
       else {
         //playerStands true blocks all other user plays
@@ -496,7 +521,8 @@ export default class Online extends Component {
           playedCard: this.userPlayedCard,
           playerCardUsed: points,
           playerCardsRemaining: this.state.playerDeck.length,
-          stands: true
+          stands: true,
+          points: this.state.playerPoints
           }
 
         if(this.state.role === 'joiner'){
@@ -541,7 +567,7 @@ export default class Online extends Component {
     let createdGameKey = newRef.key;
     let newGame = {
       "creator": {uid:firebase.auth().currentUser.uid, username: this.state.username,
-    gameInfo: {stands: false, playedCard: false, playerCardsRemaining: 4, playerCardUsed: 0, gameCardPlayed: 0}},
+    gameInfo: {stands: false, playedCard: false, playerCardsRemaining: 4, playerCardUsed: 0, gameCardPlayed: 0, points:0}},
       "state": "open"
     }
     newRef.set(newGame);
@@ -604,7 +630,7 @@ export default class Online extends Component {
       if(game){
         if(!game.joiner){
           game.joiner = {uid: firebase.auth().currentUser.uid, username: this.state.username,
-          gameInfo:{stands: false, playedCard: false, playerCardsRemaining: 4, playerCardUsed: 0, gameCardPlayed: 0}};
+          gameInfo:{stands: false, playedCard: false, playerCardsRemaining: 4, playerCardUsed: 0, gameCardPlayed: 0, points:0}};
           game.state = "joined";
         }
         return game;
