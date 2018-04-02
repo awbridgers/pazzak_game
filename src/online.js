@@ -94,64 +94,33 @@ const fillPlayerHands = (type) => {
     }
   }
 
-
-//a function to iterate over the opponents hand and return the index of a card to play
-//based on a hierarchy of what the opponenent needs to do to win the game
-const checkHand = (handArray, currentPoints, playerStands, playerPoints) => {
-  let returnValue = -1;
-  for(let i=0; i< 4; i++){
-    //1st scenario: player stands, opp should play that gives them a higher score to win, but don't go over 20
-    if(playerStands && handArray[i].pointValue + currentPoints > playerPoints && handArray[i].pointValue + currentPoints <= 20){
-      returnValue = i;
-    }
-    //2nd scenario: player stands, opp can't win but can tie the player
-    else if(playerStands && handArray[i].pointValue + currentPoints === playerPoints && handArray[i].pointValue + currentPoints <= 20){
-      returnValue = i;
-    }
-    //3rd scenario: player is not standing, opp can play card to get to 20
-    else if(!playerStands && handArray[i].pointValue + currentPoints === 20){
-      returnValue = i;
-    }
-    //4th scenario: player is not stadning, opp can't get to 20 but can get to 19
-    else if(!playerStands && handArray[i].pointValue + currentPoints === 19){
-      returnValue = i;
-    }
-    //5th scenario: player is not standing, opp can't get to 19 or 20, but can get to 18
-    else if(!playerStands && handArray[i].pointValue + currentPoints === 18){
-      returnValue = i;
-    }
-    //6th scenario: player is not standing, opp can't get to 18,19,20 but can get to 17
-    //might change this later, 17 is kind of low to stand on
-    else if(!playerStands && handArray[i].pointValue + currentPoints === 17){
-      returnValue = i;
-    }
-  }
-  //if a card can be played, but your score is under 20 and the card will lower your score, dont play it
-  if(returnValue !== -1 && currentPoints <=20 && currentPoints + handArray[returnValue].pointValue < currentPoints){
-    return -1
-  }
-  else{
-    return returnValue;
-  }
-}
-
 export class Stands extends Component {
   render(){
     return <div style = {{color: "yellow", textShadow: "-2px 2px 1px4 #000000"}}><h1>STANDS</h1></div>
   }
 }
-
 export class NewGame extends Component {
   render(){
-    return(
-    <div className = "newGame">
-      <h1>{this.props.winner} wins!</h1>
-      <h3>Click to below to start a new game</h3>
-      <button onClick = {this.props.onClick} style = {{height: "40px", width: "100px",borderRadius: "8px", fontSize: "16px"}}>
-        New Game
-      </button>
-    </div>
-  )}
+    if(this.props.type === "game"){
+      return(
+      <div className = "newGame">
+        <h1>{this.props.winner} wins!</h1>
+        <h3>Click to below to start a new game</h3>
+        <button onClick = {this.props.onClick} style = {{height: "40px", width: "100px",borderRadius: "8px", fontSize: "16px"}}>
+          New Game
+        </button>
+      </div>
+    )}
+    else if(this.props.type === "round"){
+      return(
+      <div className = "newGame">
+        {this.props.winner != "tie" && <h1>{this.props.winner} wins the round!</h1>}
+        {this.props.winner === 'tie' && <h1>Tie Game!</h1>}
+        <h3>Starting next round</h3>
+        <Loading />
+      </div>
+    )}
+  }
 }
 export class Winner extends Component {
   render(){
@@ -187,7 +156,7 @@ export default class Online extends Component {
     this.state = {playerPoints:0, oppPoints: 0, playerName: "",
       oppName: "", playerWins:0, oppWins:0, playerDefaultCards: [],
       oppDefaultCards: [], playerDeck: fillPlayerHands('random'), oppDeck:fillPlayerHands('random'),
-      playerIsStanding: false, oppIsStanding: false, gameOver : false, searchBegin: false, loggedIn: false,
+      playerIsStanding: false, oppIsStanding: false, gameOver : false, roundOver: false, searchBegin: false, loggedIn: false,
       username: "username", password:"password", gameJoined: false, gameList:[], createdGame: false,gameKey: null,
       role: null, loading: false, gameStarted: false, gameConnected: false, creatorTurn: false, playRandomCard: true,
       oppPlayedCard: false, oppCardsRemaining: 4};
@@ -206,6 +175,7 @@ export default class Online extends Component {
     // this.opponentPlayCard = this.opponentPlayCard.bind(this);
     this.determineWinner = this.determineWinner.bind(this);
     this.newRound = this.newRound.bind(this);
+    this.roundEnd = this. roundEnd.bind(this);
     this.newGame = this.newGame.bind(this);
     this.createGame = this.createGame.bind(this);
     this.handleChange = this.handleChange.bind(this);
@@ -224,11 +194,15 @@ export default class Online extends Component {
     this.playerIsReady = true;
     this.firstUpdate = true;
     this.standPoints = 0;
+    this.pickWinner = false;
 
 
   }
 
   componentDidUpdate(){
+    if(this.state.gameOver){
+      this.gameStatus.off();
+    }
     if(this.state.gameConnected && !this.listenersAdded){
       this.addListeners();
     }
@@ -238,9 +212,6 @@ export default class Online extends Component {
       this.creator = this.gamesList.child(this.state.gameKey + "/creator");
       this.joiner = this.gamesList.child(this.state.gameKey + "/joiner");
       this.gameStatus = this.gamesList.child(this.state.gameKey + "/state");
-      this.gamesList.child(this.state.gameKey).update({state:"joinerTurn"})
-
-
 
       if(this.state.role === 'creator' && this.state.oppName === ""){
         this.createdGameRef.off();
@@ -257,8 +228,9 @@ export default class Online extends Component {
           this.setState({oppName: opponentsUsername, gameBegin: true, gameJoined: false, gameConnected:true});
         });
       }
+      this.gamesList.child(this.state.gameKey).update({state:"joinerTurn"})
     }
-    if(this.state.createdGame && !this.state.gameConnected){
+    if(this.state.createdGame && !this.state.gameConnected && !this.state.gameJoined){
       this.createdGameRef = this.gamesList.child(this.state.gameKey);
       this.createdGameRef.on('value',(snapshot)=>{
         if(snapshot.val().state === 'joined'){
@@ -273,22 +245,26 @@ export default class Online extends Component {
     this.listenersAdded = true;
     this.gameStatus.on('value', (snapshot) =>{
       if(snapshot.val() === "determineWinner"){
-        ("Decide the winner please")
-        this.determineWinner()
+        this.pickWinner = true;
+        this.updateInfo();
+        console.log("1");
       }
-      if(snapshot.val() === "joinerTurn" && this.state.role === 'joiner'){
+      else if(snapshot.val() === "joinerTurn" && this.state.role === 'joiner'){
         //if both players are standing, determine the winner
         if(this.state.playerIsStanding && this.state.oppIsStanding){
           this.updateInfo()
+          console.log("2");
           this.gamesList.child(this.state.gameKey).update({state:"determineWinner"})
         }
         else{
+          console.log("go");
           this.playerGo();
         }
       }
       else if (snapshot.val() === "creatorTurn" && this.state.role === 'creator'){
         if(this.state.playerIsStanding && this.state.oppIsStanding){
           this.updateInfo()
+          console.log("3");
           this.gamesList.child(this.state.gameKey).update({state:"determineWinner"})
         }
         else{
@@ -300,6 +276,9 @@ export default class Online extends Component {
   }
   updateInfo(){
     console.log("updating");
+    if(this.state.playerIsStanding && this.state.oppIsStanding){
+      this.determineWinner()
+    }
     //if the player is the joiner
     if(this.state.role === 'joiner' && !this.state.oppIsStanding){
       this.creator.once('value').then((snapshot) => {
@@ -313,7 +292,7 @@ export default class Online extends Component {
             oppCardsRemaining:snapshot.val().gameInfo.playerCardsRemaining,
             oppIsStanding: snapshot.val().gameInfo.stands,
             oppPoints: snapshot.val().gameInfo.points
-          })
+          }, this.determineWinner)
         }
             //if the opponent did not play a card
             else if(!snapshot.val().gameInfo.playedCard){
@@ -323,7 +302,7 @@ export default class Online extends Component {
                 oppCardsRemaining:snapshot.val().gameInfo.playerCardsRemaining,
                 oppIsStanding: snapshot.val().gameInfo.stands,
                 oppPoints: snapshot.val().gameInfo.points,
-              })
+              }, this.determineWinner)
             }
           })
         }
@@ -339,7 +318,7 @@ export default class Online extends Component {
                 oppCardsRemaining:snapshot.val().gameInfo.playerCardsRemaining,
                 oppIsStanding: snapshot.val().gameInfo.stands,
                 oppPoints: snapshot.val().gameInfo.points,
-              })
+              }, this.determineWinner)
             }
 
           else if(!snapshot.val().gameInfo.playedCard){
@@ -349,46 +328,55 @@ export default class Online extends Component {
               oppCardsRemaining:snapshot.val().gameInfo.playerCardsRemaining,
               oppIsStanding: snapshot.val().gameInfo.stands,
               oppPoints: snapshot.val().gameInfo.points,
-            })
+            }, this.determineWinner)
           }
         })
       }
     }
   determineWinner(){
-    console.log("determining winner")
-    let winner = null
-    this.roundOver = true;
-    //if the user is over 20 and the opp is under, opp wins
-    if(this.state.playerPoints > 20 && this.state.oppPoints <= 20){
-      winner = "Opponent";
-    }
-    //if the user is under 20 and the opp goes over, player wins
-    else if(this.state.playerPoints <= 20 && this.state.oppPoints > 20){
-      winner = "Player";
-    }
-    else if(this.state.playerPoints > this.state.oppPoints){
-      winner = "Player";
-    }
-    else if(this.state.playerPoints < this.state.oppPoints){
-      winner = "Opponent";
-    }
-    else{
-      winner = "Tie";
-    }
-    setTimeout(()=>{
-      if(winner === "Player"){
-        alert(this.state.username + " wins the round!")
-        this.setState({playerWins: this.state.playerWins + 1});
+    if(this.pickWinner){
+      let winner = null
+      this.winCondition = null;
+      this.roundOver = true;
+      //if the user is over 20 and the opp is under, opp wins
+      if(this.state.playerPoints > 20 && this.state.oppPoints <= 20){
+        winner = "Opponent";
+        this.winCondition = "player over 20"
       }
-      else if(winner === "Opponent"){
-        alert(this.state.oppName + " wins the round!")
-        this.setState({oppWins: this.state.oppWins + 1});
+      //if the user is under 20 and the opp goes over, player wins
+      else if(this.state.playerPoints <= 20 && this.state.oppPoints > 20){
+        winner = "Player";
+        this.winCondition = "opponent over 20"
+      }
+      else if(this.state.playerPoints > this.state.oppPoints && this.state.playerPoints <= 20){
+        winner = "Player";
+        this.winCondition = "Player has more points"
+      }
+      else if(this.state.playerPoints < this.state.oppPoints && this.state.oppPoints <=20){
+        winner = "Opponent";
+        this.winCondition = "Opponent has more points"
       }
       else{
-        alert("Tie game.")
-        //this.newRound();
+        winner = "Tie";
       }
-    },500);
+      setTimeout(()=>{
+        console.log(this.winCondition);
+        if(winner === "Player"){
+          this.roundWinner = this.state.username;
+          this.setState({playerWins: this.state.playerWins + 1, roundOver: true});
+        }
+        else if(winner === "Opponent"){
+          this.roundWinner = this.state.oppName;
+          this.setState({oppWins: this.state.oppWins + 1, roundOver: true});
+        }
+        else{
+          this.roundWinner = "tie";
+          this.setState({roundOver: true});
+
+        }
+        this.roundEnd()
+      },500);
+    }
   }
   playerGo(){
     if(this.playerStands && this.state.role === 'joiner'){
@@ -432,6 +420,7 @@ export default class Online extends Component {
     if(this.playersTurn && !this.playerStands){
       //if you end turn with more than 20 points, you lose
       if(this.state.playerPoints > 20){
+
         this.gamesList.child(this.state.gameKey).update({state:"determineWinner"})
       }
       else{
@@ -501,39 +490,42 @@ export default class Online extends Component {
   }
   stand(){
     if(this.playersTurn && !this.state.playerIsStanding){
-      //if you stand with more than 20 points, you lose
-      if(this.state.playerPoints > 20){
-        console.log(this.state.playerPoints)
+      //playerStands true blocks all other user plays
+      this.firstTimeStand = true;
+      this.update = true;
+      this.playersTurn = false;
+      this.playerStands = true;
+      let points = 0;
+      if(this.userPlayedCard){
+        points = points + this.selectedPlayerCard.pointValue;
       }
-      else {
-        //playerStands true blocks all other user plays
-
-        this.firstTimeStand = true;
-        this.update = true;
-        this.playersTurn = false;
-        this.playerStands = true;
-        let points = 0;
-        if(this.userPlayedCard){
-          points = points + this.selectedPlayerCard.pointValue;
+      let subtractor = (this.userPlayedCard) ? 2 : 1;   //if user played a card, subtract 2 for the random card
+      let gameInfo = {gameCardPlayed: this.state.playerDefaultCards[this.state.playerDefaultCards.length-subtractor].pointValue,
+        playedCard: this.userPlayedCard,
+        playerCardUsed: points,
+        playerCardsRemaining: this.state.playerDeck.length,
+        stands: true,
+        points: this.state.playerPoints
         }
-        let subtractor = (this.userPlayedCard) ? 2 : 1;   //if user played a card, subtract 2 for the random card
-        let gameInfo = {gameCardPlayed: this.state.playerDefaultCards[this.state.playerDefaultCards.length-subtractor].pointValue,
-          playedCard: this.userPlayedCard,
-          playerCardUsed: points,
-          playerCardsRemaining: this.state.playerDeck.length,
-          stands: true,
-          points: this.state.playerPoints
+      //if you stand with more than 20 points, you lose; determine Winner
+      //push the game info to database and then determine winner
+      if(this.state.playerPoints > 20 && !this.state.oppIsStanding){
+          if(this.state.role === 'joiner'){
+            this.gamesList.child(this.state.gameKey + "/joiner/gameInfo").update(gameInfo);
           }
-
-        if(this.state.role === 'joiner'){
-          this.gamesList.child(this.state.gameKey + "/joiner/gameInfo").update(gameInfo);
-          this.gamesList.child(this.state.gameKey).update({state:"creatorTurn"})
-        }
-        else if(this.state.role === 'creator'){
-          this.gamesList.child(this.state.gameKey + "/creator/gameInfo").update(gameInfo);
-          this.gamesList.child(this.state.gameKey).update({state:"joinerTurn"})
-        }
-
+          else if(this.state.role === 'creator'){
+            this.gamesList.child(this.state.gameKey + "/creator/gameInfo").update(gameInfo);
+          }
+          this.gamesList.child(this.state.gameKey).update({state:"determineWinner"})
+      }
+      //if the player does not have over 20 points, push the info and change the turn
+      else if(this.state.role === 'joiner'){
+        this.gamesList.child(this.state.gameKey + "/joiner/gameInfo").update(gameInfo);
+        this.gamesList.child(this.state.gameKey).update({state:"creatorTurn"})
+      }
+      else if(this.state.role === 'creator'){
+        this.gamesList.child(this.state.gameKey + "/creator/gameInfo").update(gameInfo);
+        this.gamesList.child(this.state.gameKey).update({state:"joinerTurn"})
       }
         this.setState({playerIsStanding: true});
 
@@ -542,24 +534,50 @@ export default class Online extends Component {
       console.log("You have decided to stand. You can no longer make moves");
     }
   }
+  roundEnd(){
+    if(this.state.playerWins === 3 || this.state.oppWins === 3){
+      this.whoWon = (this.state.playerWins === 3) ? this.state.username : this.state.oppName;
+      this.setState({gameOver: true});
+    }
+    else{
+      setTimeout(()=>this.newRound(),2000);
+    }
+  }
   newRound(){
     //reset the cards and player hands, reset booleans
-    this.startCard = this.pazzakDeck[Math.floor(Math.random()*10)];
+    //this.startCard = this.pazzakDeck[Math.floor(Math.random()*10)];
     this.playersTurn = true;
     this.playerStands = false;
+    this.pickWinner = false;
     this.opponentStands = false;
+    this.update = false;
     this.roundOver = false;
     this.userPlayedCard = false;
-    this.setState({playerPoints: this.startCard.pointValue, oppPoints: 0,
-      playerDefaultCards: [this.startCard], oppDefaultCards: [],
-      playerIsStanding: false, oppIsStanding: false});
+    this.setState({playerDefaultCards:[],playerPoints: 0, oppPoints: 0, oppDefaultCards: [],
+      playerIsStanding: false, oppIsStanding: false, roundOver: false,});
+    setTimeout(()=>this.gamesList.child(this.state.gameKey).update({state:"joinerTurn"}),500);
   }
   newGame(){
-    this.startCard = this.pazzakDeck[Math.floor(Math.random()*10)];
-    this.setState({playerPoints: this.startCard.pointValue, oppPoints: 0,
-      playerWins:0, oppWins:0, playerDefaultCards: [this.startCard],
-      oppDefaultCards: [], playerDeck: fillPlayerHands(), oppDeck:fillPlayerHands(),
-      playerIsStanding: false, oppIsStanding: false, gameOver : false});
+    //reset everything except log in and delete the game from the database
+
+    if(this.state.role === 'joiner'){this.gameLocation.remove();}     //only 1 player can delete the game
+    this.playersTurn = false;
+    this.playerStands = false;
+    this.opponentStands = false;
+    this.whoseTurn = "joiner";
+    this.roundOver = false;
+    this.userPlayedCard = false;
+    this.whoWon = null;
+    this.selectedPlayerCard = 0;
+    this.gameLocation = null;
+    this.update = false;
+    this.listenersAdded = false;
+    this.setState({playerPoints:0, oppPoints: 0,oppName: "", playerWins:0, oppWins:0, playerDefaultCards: [],
+      oppDefaultCards: [], playerDeck: fillPlayerHands('random'), oppDeck:fillPlayerHands('random'),
+      playerIsStanding: false, oppIsStanding: false, gameOver : false, roundOver: false, searchBegin: false,
+      gameJoined: false, gameList:[], createdGame: false, gameKey: null,role: null, loading: false,
+      gameStarted: false, gameConnected: false, creatorTurn: false, playRandomCard: true,
+      oppPlayedCard: false, oppCardsRemaining: 4})
   }
 
   createGame(event){
@@ -612,10 +630,11 @@ export default class Online extends Component {
     this.gamesList.once("value").then((snapshot)=>{
       let currentGames = [];
       snapshot.forEach((childSnapshot)=>{
-        let game = {gameID:childSnapshot.key, game: childSnapshot.val()}
-        currentGames.push(game);
-        //console.log(game)
-      })
+        if(childSnapshot.val().state === 'open'){
+          let game = {gameID:childSnapshot.key, game: childSnapshot.val()}
+          currentGames.push(game);
+          //console.log(game)
+      }})
       this.setState({gameList: currentGames, searchBegin: true})
     })
   }
@@ -818,7 +837,10 @@ export default class Online extends Component {
             {this.state.oppIsStanding && <Stands/>}
           </div>
         </div>
-        <div>{this.state.gameOver && <NewGame winner = {this.whoWon} onClick = {this.newGame}/>}</div>
+        <div>
+          {this.state.gameOver && <NewGame winner = {this.whoWon} type = "game" onClick = {this.newGame}/>}
+          {!this.state.gameOver && this.state.roundOver && <NewGame type = "round" winner = {this.roundWinner}/>}
+        </div>
         </div>
       </div>
     )
