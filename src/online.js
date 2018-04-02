@@ -276,11 +276,12 @@ export default class Online extends Component {
   }
   updateInfo(){
     console.log("updating");
-    if(this.state.playerIsStanding && this.state.oppIsStanding){
+    if(this.state.playerIsStanding && this.state.oppIsStanding || (this.state.playerPoints >20 && this.state.oppIsStanding)){
       this.determineWinner()
     }
     //if the player is the joiner
     if(this.state.role === 'joiner' && !this.state.oppIsStanding){
+      console.log("joiner update")
       this.creator.once('value').then((snapshot) => {
       let pointsAdded = 0;
         //if the opponent played a card
@@ -289,9 +290,9 @@ export default class Online extends Component {
           this.setState({oppDefaultCards: [...this.state.oppDefaultCards,...[this.pazzakDeck[snapshot.val().gameInfo.gameCardPlayed-1],
             getPlayerCard(this.playableDeck, snapshot.val().gameInfo.playerCardUsed)]],
             oppPlayedCard:snapshot.val().gameInfo.playedCard,
-            oppCardsRemaining:snapshot.val().gameInfo.playerCardsRemaining,
             oppIsStanding: snapshot.val().gameInfo.stands,
-            oppPoints: snapshot.val().gameInfo.points
+            oppPoints: snapshot.val().gameInfo.points,
+            oppCardsRemaining: this.state.oppCardsRemaining - 1
           }, this.determineWinner)
         }
             //if the opponent did not play a card
@@ -299,7 +300,6 @@ export default class Online extends Component {
               pointsAdded = snapshot.val().gameInfo.playerCardUsed;
               this.setState({oppDefaultCards: [...this.state.oppDefaultCards,this.pazzakDeck[snapshot.val().gameInfo.gameCardPlayed-1]],
                 oppPlayedCard:snapshot.val().gameInfo.playedCard,
-                oppCardsRemaining:snapshot.val().gameInfo.playerCardsRemaining,
                 oppIsStanding: snapshot.val().gameInfo.stands,
                 oppPoints: snapshot.val().gameInfo.points,
               }, this.determineWinner)
@@ -315,9 +315,9 @@ export default class Online extends Component {
               this.setState({oppDefaultCards: [...this.state.oppDefaultCards,...[this.pazzakDeck[snapshot.val().gameInfo.gameCardPlayed-1],
                 getPlayerCard(this.playableDeck, snapshot.val().gameInfo.playerCardUsed)]],
                 oppPlayedCard:snapshot.val().gameInfo.playedCard,
-                oppCardsRemaining:snapshot.val().gameInfo.playerCardsRemaining,
                 oppIsStanding: snapshot.val().gameInfo.stands,
                 oppPoints: snapshot.val().gameInfo.points,
+                oppCardsRemaining: this.state.oppCardsRemaining - 1
               }, this.determineWinner)
             }
 
@@ -325,7 +325,6 @@ export default class Online extends Component {
             pointsAdded = snapshot.val().gameInfo.playerCardUsed;
             this.setState({oppDefaultCards: [...this.state.oppDefaultCards,this.pazzakDeck[snapshot.val().gameInfo.gameCardPlayed-1]],
               oppPlayedCard:snapshot.val().gameInfo.playedCard,
-              oppCardsRemaining:snapshot.val().gameInfo.playerCardsRemaining,
               oppIsStanding: snapshot.val().gameInfo.stands,
               oppPoints: snapshot.val().gameInfo.points,
             }, this.determineWinner)
@@ -418,12 +417,8 @@ export default class Online extends Component {
   endTurn(){
 
     if(this.playersTurn && !this.playerStands){
-      //if you end turn with more than 20 points, you lose
-      if(this.state.playerPoints > 20){
 
-        this.gamesList.child(this.state.gameKey).update({state:"determineWinner"})
-      }
-      else{
+
         //console.log(this.userPlayedCard)
         this.update = true;
         this.playersTurn = false;
@@ -443,13 +438,12 @@ export default class Online extends Component {
 
         if(this.state.role === 'joiner'){
           this.gamesList.child(this.state.gameKey + "/joiner/gameInfo").update(gameInfo);
-          this.gamesList.child(this.state.gameKey).update({state:"creatorTurn"})
+          this.state.playerPoints > 20 ? this.gamesList.child(this.state.gameKey).update({state:"determineWinner"}) : this.gamesList.child(this.state.gameKey).update({state:"creatorTurn"})
         }
         else if(this.state.role === 'creator'){
           this.gamesList.child(this.state.gameKey + "/creator/gameInfo").update(gameInfo);
-          this.gamesList.child(this.state.gameKey).update({state:"joinerTurn"})
+          this.state.playerPoints > 20 ? this.gamesList.child(this.state.gameKey).update({state:"determineWinner"}) : this.gamesList.child(this.state.gameKey).update({state:"joinerTurn"})
         }
-      }
     }
     else{
       console.log("not your turn");
@@ -811,10 +805,10 @@ export default class Online extends Component {
           <table className = 'oppHand'>
             <tbody>
               <tr>
-                <td className = "tableData">{this.state.oppDeck[0].image !== null && <img src = {blankCard} alt=""/>}</td>
-                <td className = "tableData">{this.state.oppDeck[1].image !== null && <img src = {blankCard} alt=""/>}</td>
-                <td className = "tableData">{this.state.oppDeck[2].image !== null && <img src = {blankCard} alt=""/>}</td>
-                <td className = "tableData">{this.state.oppDeck[3].image !== null && <img src = {blankCard} alt=""/>}</td>
+                <td className = "tableData">{this.state.oppCardsRemaining > 0 && <img src = {blankCard} alt=""/>}</td>
+                <td className = "tableData">{this.state.oppCardsRemaining > 1 && <img src = {blankCard} alt=""/>}</td>
+                <td className = "tableData">{this.state.oppCardsRemaining > 2 && <img src = {blankCard} alt=""/>}</td>
+                <td className = "tableData">{this.state.oppCardsRemaining > 3 && <img src = {blankCard} alt=""/>}</td>
               </tr>
             </tbody>
           </table>
