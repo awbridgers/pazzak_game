@@ -28,6 +28,7 @@ import * as firebase from 'firebase'
 import LogIn from './logIn.jsx';
 import Loading from 'react-loading-animation';
 import { Scrollbars } from 'react-custom-scrollbars';
+import {HashRouter as Router, Route, Switch, Link, withRouter} from 'react-router-dom';
 
 
 let bgDiv = {width: "100%", height: "100%", backgroundColor: "black", position: "fixed"};

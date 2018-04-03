@@ -1,3 +1,12 @@
+
+a:link{
+  color:yellow;
+}
+a:visited{
+  color: green;
+}
+
+
 .playerCards {
 float: left;
 border-spacing: 22px 10px;
@@ -192,6 +201,7 @@ left: -4px;
   width: 450px;
   background-color: #06287e;
   text-align: center;
+  color: white;
 }
 
 .winner{

@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import {HashRouter as Router, Route, Switch, Link, withRouter} from 'react-router-dom';
 import "./pazzakGame.css"
 
 export default class LogIn extends Component {
@@ -19,7 +20,7 @@ export default class LogIn extends Component {
               borderRadius: "8px", background:"white", fontSize: "16px" }} onClick={this.props.handleLogin}>Log In</button></p>
         </form>
       <div>
-        <p><font color = "white">Don't have an account? </font>Click here to make one.</p>
+        <p><font color = "white">Don't have an account? </font><Link to = "/createAccount">Click here to make one.</Link></p>
       </div>
     </div>
     )
