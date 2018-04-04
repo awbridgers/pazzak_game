@@ -6,6 +6,7 @@ import registerServiceWorker from './registerServiceWorker';
 import PlayPazzak from "./play.js";
 import Online from "./online.js";
 import config from './config.js';
+import CreateAccount from "./createAccount.jsx";
 import "./pazzakGame.css";
 import {HashRouter as Router, Route, Switch, Link, withRouter} from 'react-router-dom';
 import * as firebase from "firebase";
@@ -47,6 +48,7 @@ const Routing = () => (
     <Route exact path ="/" component = {Homepage} />
     <Route path = "/playOnline" component = {Online} />
     <Route path = "/playComputer" component = {PlayPazzak} />
+    <Route path = "/createAccount" component = {CreateAccount} />
 
     </div>
   </Router>

@@ -149,7 +149,7 @@ export class SearchGames extends Component{
   }
 }
 
-export default class Online extends Component {
+class Online extends Component {
   constructor(){
     super();
     this.pazzakDeck = fillDeck();
@@ -241,7 +241,12 @@ export default class Online extends Component {
     }
 
   }
-
+  componentWillMount(){
+    let user = firebase.auth().currentUser
+    if(user){
+      this.setState({loggedIn: true, username: user.displayName})
+    }
+  }
   addListeners(){
     this.listenersAdded = true;
     this.gameStatus.on('value', (snapshot) =>{
@@ -615,11 +620,7 @@ export default class Online extends Component {
     });
   }
   logOut(){
-    firebase.auth().signOut().then(()=>this.setState({username: "", password: "", loggedIn:false,
-      playerPoints: this.startCard.pointValue, oppPoints: 0,
-        playerWins:0, oppWins:0, playerDefaultCards: [this.startCard],
-        oppDefaultCards: [], playerDeck: fillPlayerHands(), oppDeck:fillPlayerHands(),
-        playerIsStanding: false, oppIsStanding: false, gameOver : false}))
+    firebase.auth().signOut().then(()=>{this.props.history.push("/")})
   }
   findGames(){
     this.gamesList.once("value").then((snapshot)=>{
@@ -668,6 +669,7 @@ export default class Online extends Component {
       return(
         <div style ={bgDiv}>
           <div style = {playingBoard}>
+            <button className = "signOut" onClick = {this.logOut}>Sign Out</button>
           <LogIn username = {this.state.username} password = {this.state.password} changeUser = {this.changeUser}
             changePass = {this.changePass} handleLogin = {this.handleLogin}/>
         </div>
@@ -678,6 +680,7 @@ export default class Online extends Component {
       return(
         <div style ={bgDiv}>
           <div style = {playingBoard}>
+            <button className = "signOut" onClick = {this.logOut}>Sign Out</button>
             <div className = "gamesList">
               <h1>Attempting to join game</h1>
               <Loading />
@@ -690,6 +693,7 @@ export default class Online extends Component {
       return(
         <div style ={bgDiv}>
           <div style = {playingBoard}>
+            <button className = "signOut" onClick = {this.logOut}>Sign Out</button>
           <SearchGames submit = {this.createGame} findGames = {this.findGames} />
         </div>
       </div>
@@ -699,6 +703,7 @@ export default class Online extends Component {
       return(
         <div style ={bgDiv}>
           <div style = {playingBoard}>
+            <button className = "signOut" onClick = {this.logOut}>Sign Out</button>
             <div className = "logIn">
               <h1>Waiting for Opponent</h1>
               <Loading />
@@ -718,6 +723,7 @@ export default class Online extends Component {
       return(
         <div style ={bgDiv}>
           <div style = {playingBoard}>
+            <button className = "signOut" onClick = {this.logOut}>Sign Out</button>
             <div className = "gamesList">
               <h1>Current Games:</h1>
               <p>{message}</p>
@@ -840,4 +846,12 @@ export default class Online extends Component {
       </div>
     )
   }
+  componentWillUnmount(){
+    let user = firebase.auth().currentUser
+    if(user){
+      firebase.auth().signOut();
+    }
+  }
 }
+
+export default withRouter(Online)

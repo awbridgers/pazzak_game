@@ -260,3 +260,51 @@ left: -4px;
   height: 50px;
   width: 200px;
 }
+
+.createAccount{
+  margin: auto;
+  left:0px;
+  right:0px;
+  position: absolute;
+  top: 20%;
+  height: 300px;
+  width: 450px;
+  background-color: #06287e;
+  text-align: center;
+  color: white;
+  font-size: 20px;
+}
+.createAccount form {
+  display: table;
+  margin: auto;
+  text-align: center;
+  padding: 5px 0;
+
+}
+.createAccount p{
+  display: table-row;
+  text-align: left;
+
+}
+.createAccount label{
+  display: table-cell;
+  padding: 10px;
+
+}
+.createAccount input{
+  display: table-cell;
+  margin: 10px;
+}
+.createAccount button{
+  width:100px;
+  height: 50px;
+  position: relative;
+  margin: auto;
+  border-radius: 8px;
+  background:white;
+  font-size: 16px;
+  position: absolute;
+  left: 0;
+  right:0;
+  bottom: 25px;
+}

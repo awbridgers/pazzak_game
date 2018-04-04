@@ -1,10 +1,17 @@
 import React, { Component } from 'react';
 import {HashRouter as Router, Route, Switch, Link, withRouter} from 'react-router-dom';
-import "./pazzakGame.css"
+import "./pazzakGame.css";
+import * as firebase from "firebase";
 
 export default class LogIn extends Component {
   constructor(){
     super();
+  }
+  componentWillMount(){
+    let user = firebase.auth().currentUser;
+    if(user){
+      firebase.auth().signOut();
+    }
   }
 
   render(){
