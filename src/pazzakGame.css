@@ -1,3 +1,12 @@
+
+a:link{
+  color:yellow;
+}
+a:visited{
+  color: green;
+}
+
+
 .playerCards {
 float: left;
 border-spacing: 22px 10px;
@@ -173,7 +182,7 @@ left: -4px;
 }
 
 .newGame{
-  height: 150px;
+  height: 300px;
   width:400px;
   background-color: blue;
   margin: auto;
@@ -183,11 +192,16 @@ left: -4px;
   text-align: center;
 }
 .enterName {
-  margin:auto;
-  background-color: red;
-  margin-top: auto;
-  position: relative;
-  top: 46%
+  margin: auto;
+  left:0px;
+  right:0px;
+  position: absolute;
+  top: 20%;
+  height: 250px;
+  width: 450px;
+  background-color: #06287e;
+  text-align: center;
+  color: white;
 }
 
 .winner{
@@ -198,4 +212,107 @@ left: -4px;
   top: -500px;
   color: white;
   text-align: center;
+}
+
+
+.signOut{
+  height: 25px;
+  width: 75px;
+  background-color: #4169E1;
+  position: absolute;
+  top: 0px;
+  right: 5px;
+}
+.signOut:hover{
+  background-color: #87CEEB;
+}
+.signOut:active{
+  background-color: #708090;
+}
+.home{
+  height: 25px;
+  width: 75px;
+  background-color: #4169E1;
+  position: absolute;
+  top: 0px;
+  left: 5px;
+}
+
+.logIn{
+  margin: auto;
+  left:0px;
+  right:0px;
+  color: white;
+  position: absolute;
+  top: 20%;
+  height: 250px;
+  width: 450px;
+  background-color: #06287e;
+  text-align: center;
+}
+
+.gamesList{
+  margin: auto;
+  left:0px;
+  right:0px;
+  color: white;
+  position: absolute;
+  top: 10%;
+  height: 500px;
+  width: 450px;
+  background-color: #06287e;
+  text-align: center;
+}
+
+.gameButton{
+  height: 50px;
+  width: 200px;
+}
+
+.createAccount{
+  margin: auto;
+  left:0px;
+  right:0px;
+  position: absolute;
+  top: 20%;
+  height: 300px;
+  width: 450px;
+  background-color: #06287e;
+  text-align: center;
+  color: white;
+  font-size: 20px;
+}
+.createAccount form {
+  display: table;
+  margin: auto;
+  text-align: center;
+  padding: 5px 0;
+
+}
+.createAccount p{
+  display: table-row;
+  text-align: left;
+
+}
+.createAccount label{
+  display: table-cell;
+  padding: 10px;
+
+}
+.createAccount input{
+  display: table-cell;
+  margin: 10px;
+}
+.createAccount button{
+  width:100px;
+  height: 50px;
+  position: relative;
+  margin: auto;
+  border-radius: 8px;
+  background:white;
+  font-size: 16px;
+  position: absolute;
+  left: 0;
+  right:0;
+  bottom: 25px;
 }

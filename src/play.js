@@ -178,6 +178,7 @@ export default class PlayPazzak extends Component {
     this.stand = this.stand.bind(this);
     this.playerTurn = this.playerTurn.bind(this);
     this.opponentPlayCard = this.opponentPlayCard.bind(this);
+    this.opponentTurn = this.opponentTurn.bind(this);
     this.determineWinner = this.determineWinner.bind(this);
     this.newRound = this.newRound.bind(this);
     this.newGame = this.newGame.bind(this);
