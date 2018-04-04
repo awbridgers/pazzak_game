@@ -229,6 +229,14 @@ left: -4px;
 .signOut:active{
   background-color: #708090;
 }
+.home{
+  height: 25px;
+  width: 75px;
+  background-color: #4169E1;
+  position: absolute;
+  top: 0px;
+  left: 5px;
+}
 
 .logIn{
   margin: auto;

@@ -19,7 +19,7 @@ export default class LogIn extends Component {
     <div className = "logIn">
       <h2>Please Log In</h2>
         <form onSubmit = {this.handleSubmit}>
-          <p><input type="text" style = {{fontSize: "16px"}} value = {this.props.username}  placeholder="Username or Email" onChange = {this.props.changeUser}/></p>
+          <p><input type="text" style = {{fontSize: "16px"}} value = {this.props.username}  placeholder="Username" onChange = {this.props.changeUser}/></p>
           <p><input type="password" style = {{fontSize: "16px"}} value = {this.props.password} placeholder="Password" onChange = {this.props.changePass}/></p>
 
           <p><button type="submit" style = {{width:"90px",

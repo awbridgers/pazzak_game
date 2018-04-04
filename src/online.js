@@ -156,9 +156,9 @@ class Online extends Component {
     this.playableDeck = fillPlayerHands("ttbt");
     this.state = {playerPoints:0, oppPoints: 0, playerName: "",
       oppName: "", playerWins:0, oppWins:0, playerDefaultCards: [],
-      oppDefaultCards: [], playerDeck: fillPlayerHands('random'), oppDeck:fillPlayerHands('random'),
+      oppDefaultCards: [], playerDeck: [], oppDeck:[],
       playerIsStanding: false, oppIsStanding: false, gameOver : false, roundOver: false, searchBegin: false, loggedIn: false,
-      username: "username", password:"password", gameJoined: false, gameList:[], createdGame: false,gameKey: null,
+      username: "", password:"", gameJoined: false, gameList:[], createdGame: false,gameKey: null,
       role: null, loading: false, gameStarted: false, gameConnected: false, creatorTurn: false, playRandomCard: true,
       oppPlayedCard: false, oppCardsRemaining: 4};
     this.playersTurn = false;
@@ -183,6 +183,7 @@ class Online extends Component {
     this.changeUser = this.changeUser.bind(this);
     this.changePass = this.changePass.bind(this);
     this.handleLogin = this.handleLogin.bind(this);
+    this.home = this.home.bind(this);
     this.logOut = this.logOut.bind(this);
     this.findGames = this.findGames.bind(this);
     this.joinGame = this.joinGame.bind(this);
@@ -219,14 +220,16 @@ class Online extends Component {
         this.joiner.once('value').then((snapshot)=>{
           //console.log(snapshot.val())
           let opponentsUsername = snapshot.val().username;
-          this.setState({oppName: opponentsUsername, gameBegin: true, gameJoined: false, gameConnected:true});
+          this.setState({oppName: opponentsUsername, gameBegin: true, gameJoined: false, gameConnected:true,
+             playerDeck: fillPlayerHands('random'), oppDeck:fillPlayerHands('random')});
         });
       }
       if(this.state.role === 'joiner' && this.state.oppName === ""){
         this.creator.once('value').then((snapshot)=>{
           //console.log(snapshot.val())
           let opponentsUsername = snapshot.val().username;
-          this.setState({oppName: opponentsUsername, gameBegin: true, gameJoined: false, gameConnected:true});
+          this.setState({oppName: opponentsUsername, gameBegin: true, gameJoined: false, gameConnected:true,
+             playerDeck: fillPlayerHands('random'), oppDeck:fillPlayerHands('random')});
         });
       }
       this.gamesList.child(this.state.gameKey).update({state:"joinerTurn"})
@@ -540,7 +543,7 @@ class Online extends Component {
       this.setState({gameOver: true});
     }
     else{
-      setTimeout(()=>this.newRound(),2000);
+      setTimeout(()=>this.newRound(),3000);
     }
   }
   newRound(){
@@ -661,7 +664,11 @@ class Online extends Component {
     this.setState({createdGame: false});
   }
   loadGame(){
-    setTimeout(()=>this.setState({loading:false, gameJoined:true}),2000);
+    setTimeout(()=>this.setState({loading:false, gameJoined:true}),1000);
+  }
+  home(){
+    this.newGame();
+    this.props.history.push("/");
   }
 
   render(){
@@ -670,6 +677,7 @@ class Online extends Component {
         <div style ={bgDiv}>
           <div style = {playingBoard}>
             <button className = "signOut" onClick = {this.logOut}>Sign Out</button>
+            <button className = "home" onClick = {this.home}>Home</button>
           <LogIn username = {this.state.username} password = {this.state.password} changeUser = {this.changeUser}
             changePass = {this.changePass} handleLogin = {this.handleLogin}/>
         </div>
@@ -680,7 +688,6 @@ class Online extends Component {
       return(
         <div style ={bgDiv}>
           <div style = {playingBoard}>
-            <button className = "signOut" onClick = {this.logOut}>Sign Out</button>
             <div className = "gamesList">
               <h1>Attempting to join game</h1>
               <Loading />
@@ -694,6 +701,7 @@ class Online extends Component {
         <div style ={bgDiv}>
           <div style = {playingBoard}>
             <button className = "signOut" onClick = {this.logOut}>Sign Out</button>
+            <button className = "home" onClick = {this.home}>Home</button>
           <SearchGames submit = {this.createGame} findGames = {this.findGames} />
         </div>
       </div>
@@ -704,6 +712,7 @@ class Online extends Component {
         <div style ={bgDiv}>
           <div style = {playingBoard}>
             <button className = "signOut" onClick = {this.logOut}>Sign Out</button>
+            <button className = "home" onClick = {this.home}>Home</button>
             <div className = "logIn">
               <h1>Waiting for Opponent</h1>
               <Loading />
@@ -724,8 +733,10 @@ class Online extends Component {
         <div style ={bgDiv}>
           <div style = {playingBoard}>
             <button className = "signOut" onClick = {this.logOut}>Sign Out</button>
+            <button className = "home" onClick = {this.home}>Home</button>
             <div className = "gamesList">
               <h1>Current Games:</h1>
+              <button style = {{height: "40px", width: "100px",borderRadius: "8px", fontSize: "16px"}} onClick = {this.findGames}>Refresh</button>
               <p>{message}</p>
               <Scrollbars style = {{height: "375px", width: "450px"}}>
               {this.state.gameList.map((x,i)=>{
@@ -741,11 +752,12 @@ class Online extends Component {
         </div>
       )
     }
-
+    if(this.state.gameConnected){
     return(
       <div style = {bgDiv}>
         <div style = {playingBoard}>
           <button className = "signOut" onClick = {this.logOut}>Sign Out</button>
+          <button className = "home" onClick = {this.home}>Home</button>
           <div className = "points">
             <div className = "playerPoints">{this.state.playerPoints}</div>
             <div className = "oppPoints">{this.state.oppPoints}</div>
@@ -844,6 +856,14 @@ class Online extends Component {
         </div>
         </div>
       </div>
+    )}
+    return(
+      <div style ={bgDiv}>
+        <div style = {playingBoard}>
+          <button className = "signOut" onClick = {this.logOut}>Sign Out</button>
+          <button className = "home" onClick = {this.home}>Home</button>
+          </div>
+        </div>
     )
   }
   componentWillUnmount(){
