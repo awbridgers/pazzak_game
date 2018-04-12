@@ -7,6 +7,7 @@ import PlayPazzak from "./play.js";
 import Online from "./online.js";
 import config from './config.js';
 import CreateAccount from "./createAccount.jsx";
+import Chat from "./chatWindow.jsx"
 import "./pazzakGame.css";
 import {HashRouter as Router, Route, Switch, Link, withRouter} from 'react-router-dom';
 import * as firebase from "firebase";
