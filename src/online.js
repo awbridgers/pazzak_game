@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import board from "./images/pazzakBoard2.png";
 import "./pazzakGame.css";
+import Chat from "./chatWindow.jsx"
 import gameCardOne from "./images/cards/1.png";
 import gameCardTwo from "./images/cards/2.png";
 import gameCardThree from "./images/cards/3.png";
@@ -33,6 +34,7 @@ import {HashRouter as Router, Route, Switch, Link, withRouter} from 'react-route
 
 let bgDiv = {width: "100%", height: "100%", backgroundColor: "black", position: "fixed"};
 let playingBoard = {height: "628px", width:"828px", margin: "auto", backgroundImage: "url(" + board + ")"}
+let boardWithChat = {height: "628px", position: "relative", width:"828px", marginLeft:"3%", backgroundImage: "url(" + board + ")"}
 
 class gameCards {
   constructor (points, picture){
@@ -160,7 +162,7 @@ class Online extends Component {
       playerIsStanding: false, oppIsStanding: false, gameOver : false, roundOver: false, searchBegin: false, loggedIn: false,
       username: "", password:"", gameJoined: false, gameList:[], createdGame: false,gameKey: null,
       role: null, loading: false, gameStarted: false, gameConnected: false, creatorTurn: false, playRandomCard: true,
-      oppPlayedCard: false, oppCardsRemaining: 4};
+      oppPlayedCard: false, oppCardsRemaining: 4, chatMessage: "", chatArray:[]}
     this.playersTurn = false;
     this.playerStands = false;
     this.opponentStands = false;
@@ -185,6 +187,8 @@ class Online extends Component {
     this.handleLogin = this.handleLogin.bind(this);
     this.home = this.home.bind(this);
     this.logOut = this.logOut.bind(this);
+    this.changeChat = this.changeChat.bind(this);
+    this.submitChat = this.submitChat.bind(this);
     this.findGames = this.findGames.bind(this);
     this.joinGame = this.joinGame.bind(this);
     this.cancelGame = this.cancelGame.bind(this);
@@ -214,6 +218,7 @@ class Online extends Component {
       this.creator = this.gamesList.child(this.state.gameKey + "/creator");
       this.joiner = this.gamesList.child(this.state.gameKey + "/joiner");
       this.gameStatus = this.gamesList.child(this.state.gameKey + "/state");
+      this.chat = this.gamesList.child(this.state.gameKey + "/chat");
 
       if(this.state.role === 'creator' && this.state.oppName === ""){
         this.createdGameRef.off();
@@ -281,6 +286,11 @@ class Online extends Component {
           this.playerGo();
         }
       }
+    })
+    this.chat.off();
+    this.chat.on('value',(snapshot) => {
+      let newMessage = {username:snapshot.val().username, message: snapshot.val().message}
+      this.setState({chatArray: [...this.state.chatArray,newMessage]})
     })
   }
   updateInfo(){
@@ -589,7 +599,8 @@ class Online extends Component {
     let newGame = {
       "creator": {uid:firebase.auth().currentUser.uid, username: this.state.username,
     gameInfo: {stands: false, playedCard: false, playerCardsRemaining: 4, playerCardUsed: 0, gameCardPlayed: 0, points:0}},
-      "state": "open"
+      "state": "open",
+      chat: {username: "", message: "", time:""}
     }
     newRef.set(newGame);
     this.setState({createdGame: true, gameKey: createdGameKey, role: 'creator'});
@@ -658,6 +669,7 @@ class Online extends Component {
     this.loadGame();
   }
   cancelGame(){
+    this.createdGameRef.off();
     let deleteRef = this.gamesList.child(this.state.gameKey);
     this.createdGameRef.off();
     deleteRef.remove();
@@ -669,6 +681,14 @@ class Online extends Component {
   home(){
     this.newGame();
     this.props.history.push("/");
+  }
+  changeChat(e){
+    this.setState({chatMessage: e.target.value})
+  }
+  submitChat(){
+    this.gamesList.child(this.state.gameKey + "/chat").update({username: this.state.username, message: this.state.chatMessage, time: Date.now()});
+    this.setState({chatMessage:""})
+    console.log(this.state.chat)
   }
 
   render(){
@@ -755,7 +775,7 @@ class Online extends Component {
     if(this.state.gameConnected){
     return(
       <div style = {bgDiv}>
-        <div style = {playingBoard}>
+        <div style = {boardWithChat}>
           <button className = "signOut" onClick = {this.logOut}>Sign Out</button>
           <button className = "home" onClick = {this.home}>Home</button>
           <div className = "points">
@@ -854,6 +874,7 @@ class Online extends Component {
           {this.state.gameOver && <NewGame winner = {this.whoWon} type = "game" onClick = {this.newGame}/>}
           {!this.state.gameOver && this.state.roundOver && <NewGame type = "round" winner = {this.roundWinner}/>}
         </div>
+          <Chat onChange = {this.changeChat} submit = {this.submitChat} value = {this.state.chatMessage} array = {this.state.chatArray}/>
         </div>
       </div>
     )}

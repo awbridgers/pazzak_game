@@ -27,7 +27,7 @@ import blankCard from "./images/cards/blankCard.png"
 
 
 let bgDiv = {width: "100%", height: "100%", backgroundColor: "black", position: "fixed"};
-let playingBoard = {height: "628px", width:"828px", margin: "auto", backgroundImage: "url(" + board + ")"}
+let playingBoard = {height: "628px", width:"828px",margin: "auto", backgroundImage: "url(" + board + ")"}
 
 class gameCards {
   constructor (points, picture){
@@ -166,7 +166,7 @@ export default class PlayPazzak extends Component {
     this.state = {playerPoints: this.startCard.pointValue, oppPoints: 0, playerName: "",
       oppName: "Darth Nihilus", playerWins:0, oppWins:0, playerDefaultCards: [this.startCard],
       oppDefaultCards: [], playerDeck: fillPlayerHands(), oppDeck:fillPlayerHands(),
-      playerIsStanding: false, oppIsStanding: false, gameOver : false, gameBegin: false};
+      playerIsStanding: false, oppIsStanding: false, gameOver : false, gameBegin: false, chatMessage:""};
     this.playersTurn = true;
     this.playerStands = false;
     this.opponentStands = false;
@@ -184,6 +184,7 @@ export default class PlayPazzak extends Component {
     this.newGame = this.newGame.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handleChange = this.handleChange.bind(this);
+
 
   }
 
@@ -494,6 +495,7 @@ export default class PlayPazzak extends Component {
     this.setState({playerName: event.target.value});
   }
 
+
   render(){
     if(!this.state.gameBegin){
       return(
@@ -600,6 +602,7 @@ export default class PlayPazzak extends Component {
           </div>
         </div>
         <div>{this.state.gameOver && <NewGame winner = {this.whoWon} onClick = {this.newGame}/>}</div>
+
         </div>
       </div>
     )
