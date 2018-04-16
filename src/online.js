@@ -190,6 +190,7 @@ class Online extends Component {
     this.changeChat = this.changeChat.bind(this);
     this.submitChat = this.submitChat.bind(this);
     this.findGames = this.findGames.bind(this);
+    this.updateRandomCard = this.updateRandomCard.bind(this);
     this.joinGame = this.joinGame.bind(this);
     this.cancelGame = this.cancelGame.bind(this);
     this.gamesList = firebase.database().ref('gamesList');
@@ -263,6 +264,12 @@ class Online extends Component {
         this.updateInfo();
         console.log("1");
       }
+      else if(snapshot.val() === "joinerPlayedCard" && this.state.role === 'creator'){
+        this.updateRandomCard(this.joiner);
+      }
+      else if(snapshot.val() === "creatorPlayedCard" && this.state.role === 'joiner'){
+        this.updateRandomCard(this.creator);
+      }
       else if(snapshot.val() === "joinerTurn" && this.state.role === 'joiner'){
         //if both players are standing, determine the winner
         if(this.state.playerIsStanding && this.state.oppIsStanding){
@@ -287,7 +294,6 @@ class Online extends Component {
         }
       }
     })
-    this.chat.off();
     this.chat.on('value',(snapshot) => {
       let newMessage = {username:snapshot.val().username, message: snapshot.val().message}
       this.setState({chatArray: [...this.state.chatArray,newMessage]})
@@ -306,8 +312,8 @@ class Online extends Component {
         //if the opponent played a card
         if(snapshot.val().gameInfo.playedCard){
           pointsAdded = snapshot.val().gameInfo.playerCardUsed;
-          this.setState({oppDefaultCards: [...this.state.oppDefaultCards,...[this.pazzakDeck[snapshot.val().gameInfo.gameCardPlayed-1],
-            getPlayerCard(this.playableDeck, snapshot.val().gameInfo.playerCardUsed)]],
+          this.setState({
+            oppDefaultCards: [...this.state.oppDefaultCards, getPlayerCard(this.playableDeck, snapshot.val().gameInfo.playerCardUsed)],
             oppPlayedCard:snapshot.val().gameInfo.playedCard,
             oppIsStanding: snapshot.val().gameInfo.stands,
             oppPoints: snapshot.val().gameInfo.points,
@@ -317,7 +323,7 @@ class Online extends Component {
             //if the opponent did not play a card
             else if(!snapshot.val().gameInfo.playedCard){
               pointsAdded = snapshot.val().gameInfo.playerCardUsed;
-              this.setState({oppDefaultCards: [...this.state.oppDefaultCards,this.pazzakDeck[snapshot.val().gameInfo.gameCardPlayed-1]],
+              this.setState({
                 oppPlayedCard:snapshot.val().gameInfo.playedCard,
                 oppIsStanding: snapshot.val().gameInfo.stands,
                 oppPoints: snapshot.val().gameInfo.points,
@@ -331,8 +337,8 @@ class Online extends Component {
             let pointsAdded = 0;
             if(snapshot.val().gameInfo.playedCard){
               pointsAdded = snapshot.val().gameInfo.playerCardUsed;
-              this.setState({oppDefaultCards: [...this.state.oppDefaultCards,...[this.pazzakDeck[snapshot.val().gameInfo.gameCardPlayed-1],
-                getPlayerCard(this.playableDeck, snapshot.val().gameInfo.playerCardUsed)]],
+              this.setState({
+                oppDefaultCards: [...this.state.oppDefaultCards,getPlayerCard(this.playableDeck, snapshot.val().gameInfo.playerCardUsed)],
                 oppPlayedCard:snapshot.val().gameInfo.playedCard,
                 oppIsStanding: snapshot.val().gameInfo.stands,
                 oppPoints: snapshot.val().gameInfo.points,
@@ -342,7 +348,7 @@ class Online extends Component {
 
           else if(!snapshot.val().gameInfo.playedCard){
             pointsAdded = snapshot.val().gameInfo.playerCardUsed;
-            this.setState({oppDefaultCards: [...this.state.oppDefaultCards,this.pazzakDeck[snapshot.val().gameInfo.gameCardPlayed-1]],
+            this.setState({
               oppPlayedCard:snapshot.val().gameInfo.playedCard,
               oppIsStanding: snapshot.val().gameInfo.stands,
               oppPoints: snapshot.val().gameInfo.points,
@@ -420,11 +426,19 @@ class Online extends Component {
             this.setState({playerDefaultCards: this.state.playerDefaultCards.concat(this.pazzakDeck[random]),
               playerPoints: this.state.playerPoints + this.pazzakDeck[random].pointValue,playRandomCard:false});
               this.stand();
+
           }
           else{
             this.playerIsReady = false;
+            //update the state with the random card that is selected
             this.setState({playerDefaultCards: this.state.playerDefaultCards.concat(this.pazzakDeck[random]),
-              playerPoints: this.state.playerPoints + this.pazzakDeck[random].pointValue,playRandomCard:false});
+              playerPoints: this.state.playerPoints + this.pazzakDeck[random].pointValue,playRandomCard:false},() =>{
+                this.gamesList.child(this.state.gameKey + "/" + this.state.role + "/gameInfo").update({
+                    gameCardPlayed: this.state.playerDefaultCards[this.state.playerDefaultCards.length-1].pointValue,
+                    points: this.state.playerPoints});
+                    this.gamesList.child(this.state.gameKey).update({state: this.state.role + "PlayedCard"});
+                  });
+
           }
         }
         else{
@@ -446,8 +460,8 @@ class Online extends Component {
 
           points = points + this.selectedPlayerCard.pointValue;
         }
-        let subtractor = (this.userPlayedCard) ? 2 : 1;   //if user played a card, subtract 2 for the random card
-        let gameInfo = {gameCardPlayed: this.state.playerDefaultCards[this.state.playerDefaultCards.length-subtractor].pointValue,
+        // let subtractor = (this.userPlayedCard) ? 2 : 1;   //if user played a card, subtract 2 for the random card
+        let gameInfo = {
           playedCard: this.userPlayedCard,
           playerCardUsed: points,
           playerCardsRemaining: this.state.playerDeck.length,
@@ -559,7 +573,10 @@ class Online extends Component {
   newRound(){
     //reset the cards and player hands, reset booleans
     //this.startCard = this.pazzakDeck[Math.floor(Math.random()*10)];
-    this.playersTurn = true;
+    if(this.state.role === "joiner"){
+      this.playersTurn = true;
+    }
+
     this.playerStands = false;
     this.pickWinner = false;
     this.opponentStands = false;
@@ -572,7 +589,8 @@ class Online extends Component {
   }
   newGame(){
     //reset everything except log in and delete the game from the database
-
+    this.chat.off();
+    this.gameStatus.off();
     if(this.state.role === 'joiner'){this.gameLocation.remove();}     //only 1 player can delete the game
     this.playersTurn = false;
     this.playerStands = false;
@@ -585,6 +603,7 @@ class Online extends Component {
     this.gameLocation = null;
     this.update = false;
     this.listenersAdded = false;
+
     this.setState({playerPoints:0, oppPoints: 0,oppName: "", playerWins:0, oppWins:0, playerDefaultCards: [],
       oppDefaultCards: [], playerDeck: fillPlayerHands('random'), oppDeck:fillPlayerHands('random'),
       playerIsStanding: false, oppIsStanding: false, gameOver : false, roundOver: false, searchBegin: false,
@@ -691,6 +710,15 @@ class Online extends Component {
     console.log(this.state.chat)
   }
 
+  updateRandomCard(dbRef){
+    dbRef.once('value').then((snapshot) => {
+      this.setState({
+        oppDefaultCards: [...this.state.oppDefaultCards,this.pazzakDeck[snapshot.val().gameInfo.gameCardPlayed-1]],
+        oppPoints: snapshot.val().gameInfo.points
+      })
+    })
+  }
+
   render(){
     if(!this.state.loggedIn){
       return(
@@ -756,6 +784,7 @@ class Online extends Component {
             <button className = "home" onClick = {this.home}>Home</button>
             <div className = "gamesList">
               <h1>Current Games:</h1>
+              <button style = {{height: "40px", width: "100px",borderRadius: "8px", fontSize: "16px", marginRight: "10px"}} onClick = {()=>{this.setState({searchBegin: false})}}>Back</button>
               <button style = {{height: "40px", width: "100px",borderRadius: "8px", fontSize: "16px"}} onClick = {this.findGames}>Refresh</button>
               <p>{message}</p>
               <Scrollbars style = {{height: "375px", width: "450px"}}>
