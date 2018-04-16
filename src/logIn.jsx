@@ -8,10 +8,7 @@ export default class LogIn extends Component {
     super();
   }
   componentWillMount(){
-    let user = firebase.auth().currentUser;
-    if(user){
-      firebase.auth().signOut();
-    }
+    
   }
 
   render(){

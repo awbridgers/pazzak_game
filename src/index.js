@@ -34,7 +34,13 @@ const Homepage = withRouter (({history}) => (
           <button type = 'button' style = {{width:"150px",
               height: "75px", position: "relative", margin: "auto",
               borderRadius: "8px", background:"white", fontSize: "16px", right: "25px", top: "20px"}}
-              onClick = {()=>{history.push("/playComputer")}}>Play vs Computer</button>
+              onClick = {()=>{
+                let user = firebase.auth().currentUser;
+                if(user){
+                  firebase.auth().signOut();
+                }
+                history.push("/playComputer")
+              }}>Play vs Computer</button>
         </div>
       </div>
     </div>
