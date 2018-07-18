@@ -202,6 +202,7 @@ class Online extends Component {
     this.firstUpdate = true;
     this.standPoints = 0;
     this.pickWinner = false;
+    this.chat = 'noChat'
 
 
   }
@@ -589,7 +590,7 @@ class Online extends Component {
   }
   newGame(){
     //reset everything except log in and delete the game from the database
-    this.chat.off();
+    if(this.chat != 'noChat'){this.chat.off();}
     this.gameStatus.off();
     if(this.state.role === 'joiner'){this.gameLocation.remove();}     //only 1 player can delete the game
     this.playersTurn = false;
@@ -609,7 +610,7 @@ class Online extends Component {
       playerIsStanding: false, oppIsStanding: false, gameOver : false, roundOver: false, searchBegin: false,
       gameJoined: false, gameList:[], createdGame: false, gameKey: null,role: null, loading: false,
       gameStarted: false, gameConnected: false, creatorTurn: false, playRandomCard: true,
-      oppPlayedCard: false, oppCardsRemaining: 4})
+      oppPlayedCard: false, oppCardsRemaining: 4, chatArray: []})
   }
 
   createGame(event){

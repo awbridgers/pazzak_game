@@ -28,7 +28,7 @@ const Homepage = withRouter (({history}) => (
           <button type = 'button' style = {{width:"150px",
               height: "75px", position: "relative", margin: "auto",
               borderRadius: "8px", background:"white", fontSize: "16px",left:"25px", top:"20px"}}
-              onClick = {() => {history.push("/playOnline")}}>Play Online</button>
+              onClick = {() => {alert("Currently Unavailable")}}>Play Online</button>
         </div>
         <div style = {{float:"right", height:"250px", width: "50%" }}>
           <button type = 'button' style = {{width:"150px",
@@ -48,12 +48,12 @@ const Homepage = withRouter (({history}) => (
 ))
 
 
-
+// <Route path = "/playOnline" component = {Online} />
 const Routing = () => (
   <Router>
     <div>
     <Route exact path ="/" component = {Homepage} />
-    <Route path = "/playOnline" component = {Online} />
+
     <Route path = "/playComputer" component = {PlayPazzak} />
     <Route path = "/createAccount" component = {CreateAccount} />
 
